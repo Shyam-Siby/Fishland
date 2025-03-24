@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Sign Up" %} - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h1 class="h3">{% trans "Sign Up" %}</h1>
+                        <p class="text-muted">{% blocktrans %}Join FISHLAND and start trading fresh fish today!{% endblocktrans %}</p>
+                    </div>
+
+                    <form class="signup" id="signup_form" method="POST" action="{% url 'account_signup' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="account_type" id="buyer" value="buyer" checked>
+                                    <label class="form-check-label" for="buyer">
+                                        <i class="fas fa-shopping-cart"></i> Register as Buyer
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="account_type" id="seller" value="seller">
+                                    <label class="form-check-label" for="seller">
+                                        <i class="fas fa-store"></i> Register as Seller
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        {{ form.email|as_crispy_field }}
+                        {{ form.phone|as_crispy_field }}
+                        {{ form.password1|as_crispy_field }}
+                        {{ form.password2|as_crispy_field }}
+                        
+                        <div id="seller_fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Company Name</label>
+                                        <input type="text" name="company_name" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">GST Number</label>
+                                        <input type="text" name="gst_number" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Business License</label>
+                                <input type="file" name="business_license" class="form-control">
+                            </div>
+                        </div>
+
+                        {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-primary" type="submit">{% trans "Sign Up" %}</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="mb-0">{% blocktrans %}Already have an account?{% endblocktrans %}
+                            <a href="{{ login_url }}" class="text-primary">{% trans "Sign In" %}</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sellerFields = document.getElementById('seller_fields');
+    const accountTypeInputs = document.querySelectorAll('input[name="account_type"]');
+
+    accountTypeInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'seller') {
+                sellerFields.style.display = 'block';
+            } else {
+                sellerFields.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>Stock Alert Settings - {{ product.name }}</h2>
+    
+    <!-- Stock Alert Form -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Threshold Quantity (kg)</label>
+                    <input type="number" 
+                           name="threshold" 
+                           class="form-control" 
+                           step="0.01" 
+                           min="0" 
+                           value="{{ alert.threshold_quantity|default:0 }}"
+                           required>
+                    <small class="form-text text-muted">
+                        You'll receive an alert when stock falls below this quantity
+                    </small>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" 
+                           class="form-check-input" 
+                           name="is_active" 
+                           id="is_active"
+                           {% if alert and alert.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">
+                        Enable Stock Alerts
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <a href="{% url 'seller_dashboard:manage_stock' product.id %}" class="btn btn-outline-secondary">
+                    Back to Stock Management
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Current Alert Status -->
+    {% if alert %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Current Alert Status</h5>
+            <p class="mb-0">
+                <strong>Last Notification:</strong> 
+                {% if alert.last_notification_sent %}
+                    {{ alert.last_notification_sent|date:"Y-m-d H:i" }}
+                {% else %}
+                    Never
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

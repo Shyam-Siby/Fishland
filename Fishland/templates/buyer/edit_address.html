@@ -1,0 +1,180 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Edit Address - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Profile" 
+                                 class="rounded-circle" style="width: 50px;">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="nav flex-column nav-pills">
+                        <a class="nav-link" href="{% url 'buyer:dashboard' %}">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="{% url 'buyer:order_list' %}">
+                            <i class="fas fa-shopping-bag me-2"></i> My Orders
+                        </a>
+                        <a class="nav-link active" href="{% url 'buyer:addresses' %}">
+                            <i class="fas fa-map-marker-alt me-2"></i> Addresses
+                        </a>
+                        <a class="nav-link" href="{% url 'account_email' %}">
+                            <i class="fas fa-envelope me-2"></i> Email Settings
+                        </a>
+                        <a class="nav-link" href="{% url 'account_change_password' %}">
+                            <i class="fas fa-lock me-2"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Address</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                        <div class="alert alert-danger">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row g-3">
+                            <!-- Label -->
+                            <div class="col-md-6">
+                                <label class="form-label">Address Label*</label>
+                                <input type="text" name="label" class="form-control" required
+                                       value="{{ address.label }}" placeholder="e.g., Home, Office">
+                            </div>
+                            
+                            <!-- Full Name -->
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name*</label>
+                                <input type="text" name="name" class="form-control" required
+                                       value="{{ address.name }}">
+                            </div>
+                            
+                            <!-- Phone -->
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number*</label>
+                                <input type="tel" name="phone" class="form-control" required
+                                       value="{{ address.phone }}"
+                                       pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number">
+                            </div>
+                            
+                            <!-- Address Line 1 -->
+                            <div class="col-12">
+                                <label class="form-label">Address Line 1*</label>
+                                <input type="text" name="address_line1" class="form-control" required
+                                       value="{{ address.address_line1 }}">
+                            </div>
+                            
+                            <!-- Address Line 2 -->
+                            <div class="col-12">
+                                <label class="form-label">Address Line 2</label>
+                                <input type="text" name="address_line2" class="form-control"
+                                       value="{{ address.address_line2 }}">
+                            </div>
+                            
+                            <!-- City -->
+                            <div class="col-md-6">
+                                <label class="form-label">City*</label>
+                                <input type="text" name="city" class="form-control" required
+                                       value="{{ address.city }}">
+                            </div>
+                            
+                            <!-- State -->
+                            <div class="col-md-4">
+                                <label class="form-label">State*</label>
+                                <select name="state" class="form-select" required>
+                                    <option value="">Select State</option>
+                                    <option value="Andhra Pradesh" {% if address.state == 'Andhra Pradesh' %}selected{% endif %}>Andhra Pradesh</option>
+                                    <option value="Arunachal Pradesh" {% if address.state == 'Arunachal Pradesh' %}selected{% endif %}>Arunachal Pradesh</option>
+                                    <option value="Assam" {% if address.state == 'Assam' %}selected{% endif %}>Assam</option>
+                                    <option value="Bihar" {% if address.state == 'Bihar' %}selected{% endif %}>Bihar</option>
+                                    <option value="Chhattisgarh" {% if address.state == 'Chhattisgarh' %}selected{% endif %}>Chhattisgarh</option>
+                                    <option value="Goa" {% if address.state == 'Goa' %}selected{% endif %}>Goa</option>
+                                    <option value="Gujarat" {% if address.state == 'Gujarat' %}selected{% endif %}>Gujarat</option>
+                                    <option value="Haryana" {% if address.state == 'Haryana' %}selected{% endif %}>Haryana</option>
+                                    <option value="Himachal Pradesh" {% if address.state == 'Himachal Pradesh' %}selected{% endif %}>Himachal Pradesh</option>
+                                    <option value="Jharkhand" {% if address.state == 'Jharkhand' %}selected{% endif %}>Jharkhand</option>
+                                    <option value="Karnataka" {% if address.state == 'Karnataka' %}selected{% endif %}>Karnataka</option>
+                                    <option value="Kerala" {% if address.state == 'Kerala' %}selected{% endif %}>Kerala</option>
+                                    <option value="Madhya Pradesh" {% if address.state == 'Madhya Pradesh' %}selected{% endif %}>Madhya Pradesh</option>
+                                    <option value="Maharashtra" {% if address.state == 'Maharashtra' %}selected{% endif %}>Maharashtra</option>
+                                    <option value="Manipur" {% if address.state == 'Manipur' %}selected{% endif %}>Manipur</option>
+                                    <option value="Meghalaya" {% if address.state == 'Meghalaya' %}selected{% endif %}>Meghalaya</option>
+                                    <option value="Mizoram" {% if address.state == 'Mizoram' %}selected{% endif %}>Mizoram</option>
+                                    <option value="Nagaland" {% if address.state == 'Nagaland' %}selected{% endif %}>Nagaland</option>
+                                    <option value="Odisha" {% if address.state == 'Odisha' %}selected{% endif %}>Odisha</option>
+                                    <option value="Punjab" {% if address.state == 'Punjab' %}selected{% endif %}>Punjab</option>
+                                    <option value="Rajasthan" {% if address.state == 'Rajasthan' %}selected{% endif %}>Rajasthan</option>
+                                    <option value="Sikkim" {% if address.state == 'Sikkim' %}selected{% endif %}>Sikkim</option>
+                                    <option value="Tamil Nadu" {% if address.state == 'Tamil Nadu' %}selected{% endif %}>Tamil Nadu</option>
+                                    <option value="Telangana" {% if address.state == 'Telangana' %}selected{% endif %}>Telangana</option>
+                                    <option value="Tripura" {% if address.state == 'Tripura' %}selected{% endif %}>Tripura</option>
+                                    <option value="Uttar Pradesh" {% if address.state == 'Uttar Pradesh' %}selected{% endif %}>Uttar Pradesh</option>
+                                    <option value="Uttarakhand" {% if address.state == 'Uttarakhand' %}selected{% endif %}>Uttarakhand</option>
+                                    <option value="West Bengal" {% if address.state == 'West Bengal' %}selected{% endif %}>West Bengal</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Pincode -->
+                            <div class="col-md-2">
+                                <label class="form-label">Pincode*</label>
+                                <input type="text" name="pincode" class="form-control" required
+                                       value="{{ address.pincode }}"
+                                       pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode">
+                            </div>
+                            
+                            <!-- Is Default -->
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_default" class="form-check-input" id="isDefault"
+                                           {% if address.is_default %}checked{% endif %}>
+                                    <label class="form-check-label" for="isDefault">
+                                        Set as default address
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    Save Changes
+                                </button>
+                                <a href="{% url 'buyer:addresses' %}" class="btn btn-outline-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

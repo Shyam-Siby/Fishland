@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:dashboard' %}">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'products' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:products' %}">
+                            <i class="fas fa-fish"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'orders' in request.resolver_match.url_name %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:orders' %}">
+                            <i class="fas fa-shopping-cart"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:analytics' %}">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Analytics Submenu -->
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Analytics</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'sales_analytics' %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:sales_analytics' %}">
+                            <i class="fas fa-chart-line"></i> Sales Report
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'stock_analytics' %}active{% endif %}" 
+                           href="{% url 'seller_dashboard:stock_analytics' %}">
+                            <i class="fas fa-boxes"></i> Stock Report
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+}
+
+.sidebar .nav-link.active {
+    color: #2470dc;
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+}
+
+.navbar .navbar-toggler {
+    top: .25rem;
+    right: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any additional JavaScript needed for the dashboard
+</script>
+{% endblock %}

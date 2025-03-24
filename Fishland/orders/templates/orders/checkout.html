@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
+    .checkout-step {
+        position: relative;
+        padding: 2rem;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        animation: slideIn 0.6s ease-out;
+        border: 1px solid rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .checkout-step::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--bs-primary), var(--bs-info));
+        opacity: 0.7;
+    }
+
+    .step-number {
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        animation: pulse 2s infinite;
+    }
+
+    .address-card {
+        border-radius: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid transparent;
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .address-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .address-card.selected {
+        border-color: var(--bs-primary);
+        background: linear-gradient(45deg, rgba(var(--bs-primary-rgb), 0.05), rgba(var(--bs-info-rgb), 0.05));
+    }
+
+    .address-card.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 25px;
+        height: 25px;
+        background: var(--bs-primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .delivery-slot-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .time-slot {
+        border-radius: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .time-slot:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .time-slot.selected {
+        background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+        color: white;
+        transform: translateY(-3px);
+    }
+
+    .time-slot.selected .slot-icon {
+        color: white;
+    }
+
+    .slot-icon {
+        font-size: 1.5rem;
+        color: var(--bs-primary);
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .order-item {
+        border-radius: 15px;
+        background: #fff;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .order-item:hover {
+        transform: translateX(10px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-item::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--bs-primary), var(--bs-info));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .order-item:hover::after {
+        opacity: 1;
+    }
+
+    .summary-card {
+        position: sticky;
+        top: 20px;
+        background: linear-gradient(135deg, #fff, #f8f9fa);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, 
+            rgba(var(--bs-primary-rgb), 0.03) 0%,
+            rgba(var(--bs-info-rgb), 0.03) 100%);
+        border-radius: 20px;
+        z-index: -1;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px dashed rgba(0,0,0,0.1);
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+
+    .summary-label {
+        color: var(--bs-gray-600);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: var(--bs-gray-800);
+    }
+
+    .summary-total {
+        background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.1), rgba(var(--bs-info-rgb), 0.1));
+        padding: 1rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(var(--bs-success-rgb), 0.1);
+        color: var(--bs-success);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+    }
+
+    .payment-btn {
+        background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(var(--bs-primary-rgb), 0.3);
+    }
+
+    .payment-btn:disabled {
+        background: #e9ecef;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .payment-btn::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to right,
+            rgba(255,255,255,0) 0%,
+            rgba(255,255,255,0.3) 50%,
+            rgba(255,255,255,0) 100%
+        );
+        transform: rotate(45deg);
+        animation: shimmer 2s infinite;
+    }
+
+    @media (max-width: 768px) {
+        .checkout-step {
+            padding: 1.5rem;
+        }
+        
+        .delivery-slot-container {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h2 class="mb-4 text-center">Secure Checkout</h2>
+            
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'orders:place_order' %}" id="checkout-form">
+                {% csrf_token %}
+                
+                <!-- Hidden fields for Razorpay -->
+                <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                <input type="hidden" name="razorpay_order_id" id="razorpay_order_id" value="{{ razorpay_order_id }}">
+                <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+                
+                <div class="row g-4">
+                    <!-- Left Column - Checkout Steps -->
+                    <div class="col-lg-8">
+                        <!-- Step 1: Order Items -->
+                        <div class="checkout-step">
+                            <div class="step-number">1</div>
+                            <h4 class="mb-4">Order Items</h4>
+                            {% for item in cart_items %}
+                            <div class="order-item">
+                                <div class="d-flex gap-3">
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ item.product.image.url }}" 
+                                             alt="{{ item.product.name }}"
+                                             class="rounded-3"
+                                             style="width: 100px; height: 100px; object-fit: cover;">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h5 class="mb-1">{{ item.product.name }}</h5>
+                                                <p class="mb-1 text-primary">
+                                                    {{ item.quantity }}kg × ₹{{ item.product.price_per_kg }}/kg
+                                                </p>
+                                                <p class="text-muted mb-0">
+                                                    <i class="fas fa-store me-1"></i>
+                                                    {{ item.product.seller.get_full_name }}
+                                                </p>
+                                            </div>
+                                            <h5 class="mb-0 text-primary">₹{{ item.total }}</h5>
+                                        </div>
+                                        
+                                        {% if item.quantity <= item.product.stock_quantity %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                In Stock ({{ item.product.stock_quantity }}kg available)
+                                            </span>
+                                        </div>
+                                        {% else %}
+                                        <div class="mt-2">
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="fas fa-exclamation-circle me-1"></i>
+                                                Only {{ item.product.stock_quantity }}kg available
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Step 2: Delivery Address -->
+                        <div class="checkout-step">
+                            <div class="step-number">2</div>
+                            <h4 class="mb-4">Delivery Address</h4>
+                            {% if addresses %}
+                            <div class="row g-3">
+                                {% for address in addresses %}
+                                <div class="col-md-6">
+                                    <div class="address-card p-3 {% if address.is_default %}selected{% endif %}">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="address_id" 
+                                                   value="{{ address.id }}"
+                                                   {% if address.is_default %}checked{% endif %}
+                                                   required
+                                                   id="address_{{ address.id }}">
+                                            <label class="form-check-label" for="address_{{ address.id }}">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="mb-0">{{ address.label }}</h6>
+                                                    {% if address.is_default %}
+                                                    <span class="badge bg-primary-subtle text-primary">Default</span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="mb-1"><strong>{{ address.name }}</strong></p>
+                                                <p class="mb-1 text-muted small">
+                                                    {{ address.address_line1 }}
+                                                    {% if address.address_line2 %}<br>{{ address.address_line2 }}{% endif %}
+                                                    <br>{{ address.city }}, {{ address.state }} {{ address.pincode }}
+                                                </p>
+                                                <p class="mb-0 text-muted small">
+                                                    <i class="fas fa-phone me-1"></i>{{ address.phone }}
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                <div class="col-12">
+                                    <a href="{% url 'accounts:add_address' %}" class="btn btn-outline-primary rounded-pill">
+                                        <i class="fas fa-plus me-2"></i>Add New Address
+                                    </a>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-map-marker-alt fa-3x text-muted"></i>
+                                </div>
+                                <h5>No Delivery Address Found</h5>
+                                <p class="text-muted mb-4">Please add a delivery address to continue with your order</p>
+                                <a href="{% url 'accounts:add_address' %}" class="btn btn-primary rounded-pill">
+                                    <i class="fas fa-plus me-2"></i>Add New Address
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Step 3: Delivery Slot -->
+                        <div class="checkout-step">
+                            <div class="step-number">3</div>
+                            <h4 class="mb-4">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Delivery Schedule
+                            </h4>
+                            
+                            <!-- Date Selection -->
+                            <div class="mb-4">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-calendar-day me-2"></i>
+                                    Select Delivery Date
+                                </h6>
+                                <div class="delivery-slot-container">
+                                    {% for date in available_dates %}
+                                    <div class="time-slot p-3 text-center">
+                                        <input type="radio" 
+                                               class="btn-check" 
+                                               name="delivery_date" 
+                                               id="date_{{ forloop.counter }}" 
+                                               value="{{ date.date }}"
+                                               {% if forloop.first %}checked{% endif %}
+                                               required>
+                                        <label class="d-block" for="date_{{ forloop.counter }}" style="cursor: pointer;">
+                                            <div class="slot-icon">
+                                                <i class="far fa-calendar"></i>
+                                            </div>
+                                            <small class="d-block text-muted">{{ date.day }}</small>
+                                            <strong class="d-block h4 mb-0">{{ date.date_num }}</strong>
+                                            <small class="d-block text-muted">{{ date.month }}</small>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Time Selection -->
+                            <div>
+                                <h6 class="mb-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Select Delivery Time
+                                </h6>
+                                <div class="delivery-slot-container">
+                                    {% for time in available_times %}
+                                    <div class="time-slot p-3 text-center">
+                                        <input type="radio" 
+                                               class="btn-check" 
+                                               name="delivery_time" 
+                                               id="time_{{ forloop.counter }}" 
+                                               value="{{ time }}"
+                                               {% if forloop.first %}checked{% endif %}
+                                               required>
+                                        <label class="d-block" for="time_{{ forloop.counter }}" style="cursor: pointer;">
+                                            <div class="slot-icon">
+                                                {% if "AM" in time %}
+                                                <i class="fas fa-sun"></i>
+                                                {% else %}
+                                                <i class="fas fa-moon"></i>
+                                                {% endif %}
+                                            </div>
+                                            <span class="d-block">{{ time }}</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Order Summary -->
+                    <div class="col-lg-4">
+                        <div class="summary-card">
+                            <h4 class="mb-4">
+                                <i class="fas fa-receipt me-2"></i>
+                                Order Summary
+                            </h4>
+                            
+                            <div class="summary-row">
+                                <span class="summary-label">
+                                    <i class="fas fa-shopping-basket"></i>
+                                    Subtotal
+                                </span>
+                                <span class="summary-value">₹{{ subtotal }}</span>
+                            </div>
+                            
+                            <div class="summary-row">
+                                <span class="summary-label">
+                                    <i class="fas fa-truck"></i>
+                                    Delivery Fee
+                                </span>
+                                <span class="summary-value">₹{{ delivery_fee }}</span>
+                            </div>
+                            
+                            {% if cart_total >= free_delivery_threshold %}
+                            <div class="secure-badge">
+                                <i class="fas fa-truck"></i>
+                                Free Delivery Applied
+                            </div>
+                            {% endif %}
+                            
+                            <div class="summary-total">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Total Amount</h5>
+                                    <h4 class="mb-0 text-primary">₹{{ total }}</h4>
+                                </div>
+                            </div>
+
+                            {% if has_stock_issues %}
+                            <div class="alert alert-danger mt-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Some items have stock issues. Please update your cart.
+                            </div>
+                            {% endif %}
+
+                            <button type="button" 
+                                    id="rzp-button"
+                                    class="payment-btn w-100 mt-4" 
+                                    {% if has_stock_issues or not addresses %}disabled{% endif %}>
+                                <i class="fas fa-lock me-2"></i>
+                                Proceed to Payment
+                            </button>
+                            
+                            {% if not addresses %}
+                            <div class="text-center mt-3">
+                                <small class="text-danger">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Add a delivery address to continue
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="secure-badge mt-4">
+                                <i class="fas fa-shield-alt"></i>
+                                Secure Payment by Razorpay
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle address card selection
+    const addressCards = document.querySelectorAll('.address-card');
+    addressCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            addressCards.forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Check the radio input
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+
+    // Handle time slot selection
+    const timeSlots = document.querySelectorAll('.time-slot');
+    timeSlots.forEach(slot => {
+        slot.addEventListener('click', function() {
+            const input = this.querySelector('input[type="radio"]');
+            if (input.name === 'delivery_date') {
+                timeSlots.forEach(s => {
+                    if (s.querySelector('input[name="delivery_date"]')) {
+                        s.classList.remove('selected');
+                    }
+                });
+            } else {
+                timeSlots.forEach(s => {
+                    if (s.querySelector('input[name="delivery_time"]')) {
+                        s.classList.remove('selected');
+                    }
+                });
+            }
+            this.classList.add('selected');
+            input.checked = true;
+        });
+    });
+
+    // Initialize Razorpay
+    var options = {
+        key: '{{ razorpay_merchant_key }}',
+        amount: '{{ razorpay_amount }}',
+        currency: 'INR',
+        name: 'Fishland',
+        description: 'Order Payment',
+        order_id: '{{ razorpay_order_id }}',
+        handler: function (response) {
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            document.getElementById('checkout-form').submit();
+        },
+        prefill: {
+            name: '{{ user.get_full_name }}',
+            email: '{{ user.email }}',
+            contact: '{{ default_address.phone }}'
+        },
+        theme: {
+            color: '#0d6efd'
+        }
+    };
+    var rzp = new Razorpay(options);
+    document.getElementById('rzp-button').onclick = function(e) {
+        rzp.open();
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

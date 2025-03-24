@@ -1,0 +1,348 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Browse Products - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 col-xl-2">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Categories -->
+                        <div class="mb-4">
+                            <h6>Categories</h6>
+                            {% for category in categories %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="category" 
+                                       value="{{ category.id }}" id="cat{{ category.id }}"
+                                       {% if category.id|stringformat:"s" in request.GET.category %}checked{% endif %}>
+                                <label class="form-check-label" for="cat{{ category.id }}">
+                                    {{ category.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-4">
+                            <h6>Price Range (per kg)</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="min_price" placeholder="Min" 
+                                           value="{{ request.GET.min_price }}">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="max_price" placeholder="Max"
+                                           value="{{ request.GET.max_price }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Availability -->
+                        <div class="mb-4">
+                            <h6>Availability</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="in_stock" 
+                                       id="inStock" value="true"
+                                       {% if request.GET.in_stock %}checked{% endif %}>
+                                <label class="form-check-label" for="inStock">
+                                    In Stock Only
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sort By -->
+                        <div class="mb-4">
+                            <h6>Sort By</h6>
+                            <select class="form-select form-select-sm" name="sort">
+                                <option value="latest" {% if request.GET.sort == 'latest' %}selected{% endif %}>Latest</option>
+                                <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="popular" {% if request.GET.sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9 col-xl-10">
+            <!-- Search Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="Search products..." value="{{ request.GET.search }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'cart:view' %}" class="btn btn-outline-primary position-relative">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                                {% if cart_count %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ cart_count }}
+                                </span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if products %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                {% for product in products %}
+                <div class="col">
+                    <div class="card h-100 product-card">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}"
+                             style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">{{ product.name }}</h5>
+                            <p class="text-muted small mb-2">{{ product.category.name }}</p>
+                            <p class="card-text">{{ product.description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">₹{{ product.price_per_kg }}/kg</h5>
+                                <span class="badge {% if product.stock_quantity > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if product.stock_quantity > 0 %}
+                                        In Stock
+                                    {% else %}
+                                        Out of Stock
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="input-group input-group-sm" style="max-width: 120px;">
+                                    <button class="btn btn-outline-secondary" type="button" 
+                                            onclick="updateQuantity('{{ product.id }}', -1)">-</button>
+                                    <input type="number" class="form-control text-center" id="qty{{ product.id }}"
+                                           value="1" min="1" max="{{ product.stock_quantity }}">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="updateQuantity('{{ product.id }}', 1)">+</button>
+                                </div>
+                                <button class="btn btn-primary btn-sm" 
+                                        onclick="addToCart('{{ product.id }}')"
+                                        {% if not product.stock_quantity %}disabled{% endif %}>
+                                    <i class="fas fa-cart-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-fish fa-3x text-muted mb-3"></i>
+                <h4>No Products Found</h4>
+                <p class="text-muted">Try adjusting your search or filter criteria</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <img src="" alt="Product Image" class="img-fluid" id="modalProductImage">
+                    </div>
+                    <div class="col-md-6">
+                        <h4 id="modalProductName"></h4>
+                        <p class="text-muted" id="modalProductCategory"></p>
+                        <p id="modalProductDescription"></p>
+                        <h5 class="mb-3">₹<span id="modalProductPrice"></span>/kg</h5>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="input-group me-3" style="max-width: 150px;">
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateModalQuantity(-1)">-</button>
+                                <input type="number" class="form-control text-center" id="modalQuantity" value="1" min="1">
+                                <button class="btn btn-outline-secondary" type="button" onclick="updateModalQuantity(1)">+</button>
+                            </div>
+                            <button class="btn btn-primary" onclick="addToCartFromModal()">
+                                Add to Cart
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-success" id="modalStockStatus"></span>
+                        </div>
+                        <div>
+                            <h6>Seller Information</h6>
+                            <p class="mb-1" id="modalSellerName"></p>
+                            <p class="mb-0 text-muted small" id="modalSellerLocation"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: transform 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .card-img-top {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentProductId = null;
+
+    function updateQuantity(productId, change) {
+        const input = document.getElementById(`qty${productId}`);
+        let value = parseInt(input.value) + change;
+        value = Math.max(1, Math.min(value, parseInt(input.max)));
+        input.value = value;
+    }
+
+    function updateModalQuantity(change) {
+        const input = document.getElementById('modalQuantity');
+        let value = parseInt(input.value) + change;
+        value = Math.max(1, Math.min(value, parseInt(input.max)));
+        input.value = value;
+    }
+
+    function addToCart(productId) {
+        const quantity = document.getElementById(`qty${productId}`).value;
+        makeRequest('/api/cart/add/', 'POST', {
+            product_id: productId,
+            quantity: quantity
+        }).then(response => {
+            showToast('Product added to cart');
+            updateCartCount(response.cart_count);
+        });
+    }
+
+    function addToCartFromModal() {
+        if (currentProductId) {
+            const quantity = document.getElementById('modalQuantity').value;
+            makeRequest('/api/cart/add/', 'POST', {
+                product_id: currentProductId,
+                quantity: quantity
+            }).then(response => {
+                showToast('Product added to cart');
+                updateCartCount(response.cart_count);
+                $('#quickViewModal').modal('hide');
+            });
+        }
+    }
+
+    function quickView(productId) {
+        currentProductId = productId;
+        makeRequest(`/api/products/${productId}/`)
+            .then(product => {
+                document.getElementById('modalProductImage').src = product.image;
+                document.getElementById('modalProductName').textContent = product.name;
+                document.getElementById('modalProductCategory').textContent = product.category.name;
+                document.getElementById('modalProductDescription').textContent = product.description;
+                document.getElementById('modalProductPrice').textContent = product.price_per_kg;
+                document.getElementById('modalQuantity').max = product.stock_quantity;
+                document.getElementById('modalStockStatus').textContent = 
+                    product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock';
+                document.getElementById('modalSellerName').textContent = product.seller.company_name;
+                document.getElementById('modalSellerLocation').textContent = product.seller.location;
+
+                const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+                modal.show();
+            });
+    }
+
+    // Add click handlers for product images
+    document.querySelectorAll('.card-img-top').forEach(img => {
+        img.addEventListener('click', function() {
+            const productId = this.closest('.product-card')
+                                .querySelector('[onclick^="addToCart"]')
+                                .getAttribute('onclick')
+                                .match(/'([^']+)'/)[1];
+            quickView(productId);
+        });
+    });
+
+    function updateCartCount(count) {
+        const cartButton = document.querySelector('[href="{% url "cart:view" %}"]');
+        const badge = cartButton.querySelector('.badge');
+        if (count > 0) {
+            if (badge) {
+                badge.textContent = count;
+            } else {
+                const newBadge = document.createElement('span');
+                newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                newBadge.textContent = count;
+                cartButton.appendChild(newBadge);
+            }
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+</script>
+{% endblock %}

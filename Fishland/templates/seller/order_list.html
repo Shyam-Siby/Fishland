@@ -1,0 +1,201 @@
+{% extends 'seller/base.html' %}
+{% load static %}
+{% load seller_tags %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Orders Management</h2>
+            <p class="text-muted mb-0">Manage orders and assign delivery agents</p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Filter Dropdown -->
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel"></i> Filter Orders
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item {% if status == 'all' %}active{% endif %}" href="?status=all">All Orders</a></li>
+                    <li><a class="dropdown-item {% if status == 'PENDING' %}active{% endif %}" href="?status=PENDING">Pending</a></li>
+                    <li><a class="dropdown-item {% if status == 'CONFIRMED' %}active{% endif %}" href="?status=CONFIRMED">Confirmed</a></li>
+                    <li><a class="dropdown-item {% if status == 'READY_FOR_DELIVERY' %}active{% endif %}" href="?status=READY_FOR_DELIVERY">Ready for Delivery</a></li>
+                    <li><a class="dropdown-item {% if status == 'ASSIGNED_TO_DELIVERY' %}active{% endif %}" href="?status=ASSIGNED_TO_DELIVERY">Assigned to Delivery</a></li>
+                    <li><a class="dropdown-item {% if status == 'OUT_FOR_DELIVERY' %}active{% endif %}" href="?status=OUT_FOR_DELIVERY">Out for Delivery</a></li>
+                    <li><a class="dropdown-item {% if status == 'DELIVERED' %}active{% endif %}" href="?status=DELIVERED">Delivered</a></li>
+                    <li><a class="dropdown-item {% if status == 'CANCELLED' %}active{% endif %}" href="?status=CANCELLED">Cancelled</a></li>
+                </ul>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" data-bs-toggle="dropdown">
+                    <i class="bi bi-lightning"></i> Quick Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?status=READY_FOR_DELIVERY">View Orders Ready for Delivery</a></li>
+                    <li><a class="dropdown-item" href="?status=ASSIGNED_TO_DELIVERY">View Assigned Orders</a></li>
+                    <li><a class="dropdown-item" href="?status=OUT_FOR_DELIVERY">View Orders Out for Delivery</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?needs_delivery=true">View Orders Needing Delivery Agent</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Delivery Agent</th>
+                            <th>Delivery Status</th>
+                            <th>Created At</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <strong>#{{ order.id }}</strong>
+                                {% if order.status == 'READY_FOR_DELIVERY' and not order.delivery_boy %}
+                                <span class="badge bg-warning">Needs Delivery Agent</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.user.get_full_name }}</td>
+                            <td>₹{{ order.total }}</td>
+                            <td>{% order_status_badge order.status %}</td>
+                            <td>
+                                {% if order.delivery_boy %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-person"></i> {{ order.delivery_boy.user.get_full_name }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.status == 'ASSIGNED_TO_DELIVERY' %}
+                                    <span class="badge bg-primary">Assigned</span>
+                                {% elif order.status == 'OUT_FOR_DELIVERY' %}
+                                    <span class="badge bg-info">Out for Delivery</span>
+                                    {% if order.delivery_pickup_at %}
+                                    <br><small class="text-muted">Picked up: {{ order.delivery_pickup_at|timesince }} ago</small>
+                                    {% endif %}
+                                {% elif order.status == 'DELIVERED' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                    {% if order.delivery_completed_at %}
+                                    <br><small class="text-muted">{{ order.delivery_completed_at|timesince }} ago</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Started</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at|timesince }} ago</td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="{% url 'seller:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if order.status == 'READY_FOR_DELIVERY' and not order.delivery_boy %}
+                                    <a href="{% url 'seller:assign_delivery' order.id %}" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-person-plus"></i> Assign
+                                    </a>
+                                    {% elif order.status == 'ASSIGNED_TO_DELIVERY' %}
+                                    <a href="{% url 'seller:start_delivery' order.id %}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-truck"></i> Start
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" 
+                                            onclick="unassignDelivery('{{ order.id }}', '{{ order.delivery_boy.user.get_full_name }}')">
+                                        <i class="bi bi-person-dash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% if orders.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if orders.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in orders.paginator.page_range %}
+            {% if orders.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h3 class="mt-3">No Orders Found</h3>
+        <p class="text-muted">No orders match your current filter criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Unassign Delivery Confirmation Modal -->
+<div class="modal fade" id="unassignDeliveryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Unassign Delivery Agent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to unassign <strong id="agentName"></strong> from this order?</p>
+                <p class="text-muted small">You'll need to assign a new delivery agent after this.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="unassignForm" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Unassign Agent</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function unassignDelivery(orderId, agentName) {
+    const modal = document.getElementById('unassignDeliveryModal');
+    document.getElementById('agentName').textContent = agentName;
+    document.getElementById('unassignForm').action = `/seller/orders/${orderId}/unassign-delivery/`;
+    new bootstrap.Modal(modal).show();
+}
+</script>
+{% endblock %}
+{% endblock %}

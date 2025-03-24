@@ -1,0 +1,158 @@
+{% extends 'seller/base.html' %}
+{% load static %}
+{% load seller_tags %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Welcome, {{ request.user.get_full_name }}</h1>
+        <div class="btn-group">
+            <a href="{% url 'seller:add_product' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Product
+            </a>
+            <a href="{% url 'seller:order_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-list-check"></i> View Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <!-- Orders Today -->
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-cart3"></i> Orders Today
+                    </h6>
+                    <h2 class="card-text">{{ orders_today }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Today -->
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-currency-rupee"></i> Revenue Today
+                    </h6>
+                    <h2 class="card-text">₹{{ revenue_today|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Products -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-box-seam"></i> Total Products
+                    </h6>
+                    <h2 class="card-text">{{ total_products }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Revenue -->
+        <div class="col-md-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-graph-up"></i> Total Revenue
+                    </h6>
+                    <h2 class="card-text">₹{{ total_revenue|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recent Orders</h5>
+                    <a href="{% url 'seller:order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.user.get_full_name }}</td>
+                                    <td>₹{{ order.total }}</td>
+                                    <td>
+                                        <span class="badge {{ order.status|order_status_class }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'seller:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No recent orders found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Alerts -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Stock Alerts</h5>
+                    <a href="{% url 'seller:stock_management' %}" class="btn btn-sm btn-outline-primary">Manage Stock</a>
+                </div>
+                <div class="card-body">
+                    {% if low_stock_items %}
+                    <div class="list-group">
+                        {% for product in low_stock_items %}
+                        <div class="list-group-item {% if product.stock_quantity == 0 %}list-group-item-danger{% else %}list-group-item-warning{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">{{ product.name }}</h6>
+                                    <small>
+                                        {% if product.stock_quantity == 0 %}
+                                            Out of stock
+                                        {% else %}
+                                            Only {{ product.stock_quantity }} left
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <a href="{% url 'seller:update_stock' product.id %}" class="btn btn-sm btn-outline-primary">
+                                    Update Stock
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted my-4">No stock alerts at this time.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Orders - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0">Orders</h1>
+            <p class="text-muted">Manage your customer orders</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control" placeholder="Search orders..." 
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="CONFIRMED" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                        <option value="PROCESSING" {% if request.GET.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                        <option value="SHIPPED" {% if request.GET.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                        <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                        <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                        <span class="input-group-text bg-light">to</span>
+                        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Order ID</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td class="ps-4">
+                                <h6 class="mb-0">#{{ order.id }}</h6>
+                                <small class="text-muted">{{ order.payment_method }}</small>
+                            </td>
+                            <td>
+                                <div>
+                                    <h6 class="mb-0">{{ order.user.get_full_name }}</h6>
+                                    <small class="text-muted">{{ order.user.email }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <h6 class="mb-0">{{ order.items.count }} items</h6>
+                                <small class="text-muted">{{ order.total_quantity }} kg total</small>
+                            </td>
+                            <td>
+                                <h6 class="mb-0">₹{{ order.total }}</h6>
+                                {% if order.payment_status == 'PAID' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if order.status == 'PENDING' %}bg-warning
+                                             {% elif order.status == 'CONFIRMED' %}bg-info
+                                             {% elif order.status == 'PROCESSING' %}bg-primary
+                                             {% elif order.status == 'SHIPPED' %}bg-secondary
+                                             {% elif order.status == 'DELIVERED' %}bg-success
+                                             {% else %}bg-danger{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div>
+                                    {{ order.created_at|date:"M d, Y" }}
+                                    <br>
+                                    <small class="text-muted">{{ order.created_at|date:"h:i A" }}</small>
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewOrder({{ order.id }})">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        {% if order.status == 'PENDING' %}
+                                        <li>
+                                            <form method="post" action="{% url 'seller:confirm_order' order.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="fas fa-check text-success me-2"></i>Confirm Order
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                        {% if order.status == 'CONFIRMED' %}
+                                        <li>
+                                            <form method="post" action="{% url 'seller:process_order' order.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="fas fa-box text-primary me-2"></i>Start Processing
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                        {% if order.status == 'PROCESSING' %}
+                                        <li>
+                                            <form method="post" action="{% url 'seller:ship_order' order.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="fas fa-truck text-info me-2"></i>Mark as Shipped
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                        {% if order.status == 'SHIPPED' %}
+                                        <li>
+                                            <form method="post" action="{% url 'seller:deliver_order' order.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="fas fa-box-check text-success me-2"></i>Mark as Delivered
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                        {% if order.status != 'DELIVERED' and order.status != 'CANCELLED' %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="{% url 'seller:cancel_order' order.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-times-circle me-2"></i>Cancel Order
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                    <p class="mb-0">No orders found</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if orders.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if orders.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in orders.paginator.page_range %}
+                {% if orders.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- View Order Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="orderDetails">
+                    Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewOrder(orderId) {
+    var modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+    modal.show();
+    
+    // Fetch order details
+    fetch(`/seller/orders/${orderId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('orderDetails').innerHTML = `
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <p class="mb-1"><strong>Order ID:</strong> #${data.id}</p>
+                        <p class="mb-1"><strong>Date:</strong> ${data.date}</p>
+                        <p class="mb-1"><strong>Status:</strong> <span class="badge bg-${data.status_color}">${data.status}</span></p>
+                        <p class="mb-0"><strong>Payment:</strong> 
+                            <span class="badge bg-${data.payment_status === 'PAID' ? 'success' : 'warning'}">
+                                ${data.payment_status}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Customer Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> ${data.customer_name}</p>
+                        <p class="mb-1"><strong>Email:</strong> ${data.customer_email}</p>
+                        <p class="mb-1"><strong>Phone:</strong> ${data.customer_phone}</p>
+                        <p class="mb-0"><strong>Address:</strong> ${data.shipping_address}</p>
+                    </div>
+                </div>
+                <h6>Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.items.map(item => `
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="${item.image}" alt="${item.product}" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            <div>
+                                                <h6 class="mb-0">${item.product}</h6>
+                                                <small class="text-muted">SKU: ${item.sku}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₹${item.price}/kg</td>
+                                    <td>${item.quantity} kg</td>
+                                    <td class="text-end">₹${item.total}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end">₹${data.subtotal}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Tax (${data.tax_rate}%):</strong></td>
+                                <td class="text-end">₹${data.tax}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end"><strong>₹${data.total}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                ${data.tracking_number ? `
+                    <div class="mt-4">
+                        <h6>Shipping Information</h6>
+                        <p class="mb-1"><strong>Tracking Number:</strong> ${data.tracking_number}</p>
+                        <p class="mb-1"><strong>Carrier:</strong> ${data.carrier}</p>
+                        <p class="mb-0"><strong>Estimated Delivery:</strong> ${data.estimated_delivery}</p>
+                    </div>
+                ` : ''}
+            `;
+        })
+        .catch(error => {
+            document.getElementById('orderDetails').innerHTML = 'Error loading order details.';
+        });
+}
+</script>
+{% endblock %}

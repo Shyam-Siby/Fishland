@@ -1,0 +1,260 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}About Us - FISHLAND{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative">
+    <img src="{% static 'images/about/hero.jpg' %}" alt="About FISHLAND"
+         class="w-100" style="height: 400px; object-fit: cover;">
+    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+         style="background: rgba(0, 0, 0, 0.5);">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">About FISHLAND</h1>
+            <p class="lead mb-0">Your trusted partner in fresh seafood delivery</p>
+        </div>
+    </div>
+</section>
+
+<!-- Our Story -->
+<section class="our-story py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Our Story</h2>
+                <p class="lead mb-4">FISHLAND was founded with a simple mission: to bring the freshest seafood directly from local fishermen to your table.</p>
+                <p class="mb-4">What started as a small local fish market has grown into a trusted online platform, connecting quality seafood suppliers with customers who value freshness and sustainability.</p>
+                <div class="row g-4 mt-4">
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-users fa-2x text-primary me-3"></i>
+                            <div>
+                                <h4 class="mb-1">10,000+</h4>
+                                <p class="mb-0 text-muted">Happy Customers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-fish fa-2x text-primary me-3"></i>
+                            <div>
+                                <h4 class="mb-1">500+</h4>
+                                <p class="mb-0 text-muted">Fish Varieties</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shipping-fast fa-2x text-primary me-3"></i>
+                            <div>
+                                <h4 class="mb-1">50+</h4>
+                                <p class="mb-0 text-muted">Delivery Areas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-handshake fa-2x text-primary me-3"></i>
+                            <div>
+                                <h4 class="mb-1">100+</h4>
+                                <p class="mb-0 text-muted">Partner Fishermen</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <img src="{% static 'images/about/story.jpg' %}" alt="Our Story"
+                         class="img-fluid rounded">
+                    <div class="position-absolute bottom-0 end-0 bg-primary text-white p-4 rounded"
+                         style="transform: translate(25%, 25%);">
+                        <h3 class="mb-2">Est. 2020</h3>
+                        <p class="mb-0">5 Years of Excellence</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Mission -->
+<section class="our-mission py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <div class="card h-100 border-0 p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-bullseye fa-3x"></i>
+                    </div>
+                    <h3>Our Mission</h3>
+                    <p class="text-muted">To provide the freshest seafood while supporting local fishing communities and promoting sustainable fishing practices.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <div class="card h-100 border-0 p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-eye fa-3x"></i>
+                    </div>
+                    <h3>Our Vision</h3>
+                    <p class="text-muted">To become the most trusted online seafood marketplace, known for quality, sustainability, and customer satisfaction.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card h-100 border-0 p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-heart fa-3x"></i>
+                    </div>
+                    <h3>Our Values</h3>
+                    <p class="text-muted">Quality, Transparency, Sustainability, Community Support, and Customer Service Excellence.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Process -->
+<section class="our-process py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="display-6 fw-bold">How We Work</h2>
+            <p class="text-muted">From ocean to your doorstep</p>
+        </div>
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <div class="process-card text-center">
+                    <div class="process-icon mb-4">
+                        <i class="fas fa-fish fa-3x text-primary"></i>
+                    </div>
+                    <h4>1. Sourcing</h4>
+                    <p class="text-muted">We partner with local fishermen who follow sustainable fishing practices</p>
+                </div>
+            </div>
+            <div class="col-lg-3 mb-4">
+                <div class="process-card text-center">
+                    <div class="process-icon mb-4">
+                        <i class="fas fa-clipboard-check fa-3x text-primary"></i>
+                    </div>
+                    <h4>2. Quality Check</h4>
+                    <p class="text-muted">Every fish undergoes strict quality inspection</p>
+                </div>
+            </div>
+            <div class="col-lg-3 mb-4">
+                <div class="process-card text-center">
+                    <div class="process-icon mb-4">
+                        <i class="fas fa-box fa-3x text-primary"></i>
+                    </div>
+                    <h4>3. Packaging</h4>
+                    <p class="text-muted">Carefully packed to maintain freshness</p>
+                </div>
+            </div>
+            <div class="col-lg-3 mb-4">
+                <div class="process-card text-center">
+                    <div class="process-icon mb-4">
+                        <i class="fas fa-truck fa-3x text-primary"></i>
+                    </div>
+                    <h4>4. Delivery</h4>
+                    <p class="text-muted">Swift delivery to your doorstep</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Team -->
+<section class="our-team py-5 bg-light">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <h2 class="display-6 fw-bold">Meet Our Team</h2>
+            <p class="text-muted">The people behind FISHLAND</p>
+        </div>
+        <div class="row g-4">
+            {% for member in team_members %}
+            <div class="col-md-3">
+                <div class="team-card text-center">
+                    {% if member.image %}
+                    <img src="{{ member.image.url }}" alt="{{ member.name }}"
+                         class="rounded-circle mb-3" style="width: 200px; height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                         style="width: 200px; height: 200px;">
+                        <i class="fas fa-user fa-4x"></i>
+                    </div>
+                    {% endif %}
+                    <h4>{{ member.name }}</h4>
+                    <p class="text-muted mb-2">{{ member.position }}</p>
+                    <div class="social-links">
+                        {% if member.linkedin %}
+                        <a href="{{ member.linkedin }}" class="text-muted me-2" target="_blank">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        {% endif %}
+                        {% if member.twitter %}
+                        <a href="{{ member.twitter }}" class="text-muted me-2" target="_blank">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        {% endif %}
+                        {% if member.email %}
+                        <a href="mailto:{{ member.email }}" class="text-muted">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Contact CTA -->
+<section class="contact-cta py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-6 fw-bold mb-4">Have Questions?</h2>
+                <p class="lead mb-4">We're here to help! Contact our support team for any queries.</p>
+                <a href="{% url 'shop:contact' %}" class="btn btn-primary btn-lg">
+                    Contact Us <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .process-card {
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        transition: transform 0.3s;
+    }
+
+    .process-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .team-card {
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        transition: transform 0.3s;
+    }
+
+    .team-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .social-links a {
+        font-size: 1.2rem;
+        transition: color 0.3s;
+    }
+
+    .social-links a:hover {
+        color: var(--bs-primary) !important;
+    }
+</style>
+{% endblock %}

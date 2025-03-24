@@ -1,0 +1,35 @@
+{% extends 'emails/base.html' %}
+
+{% block title %}Low Stock Alert - {{ product.name }}{% endblock %}
+
+{% block content %}
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #e74c3c;">⚠️ Low Stock Alert</h2>
+    
+    <p>Dear {{ product.seller.get_full_name|default:product.seller.email }},</p>
+    
+    <p>This is to inform you that the stock level for <strong>{{ product.name }}</strong> has fallen below your set threshold.</p>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3 style="margin-top: 0;">Stock Details:</h3>
+        <ul style="list-style: none; padding: 0;">
+            <li><strong>Current Stock:</strong> {{ product.stock_quantity }}kg</li>
+            <li><strong>Alert Threshold:</strong> {{ product.stock_alert.threshold_quantity }}kg</li>
+            <li><strong>Category:</strong> {{ product.category.name }}</li>
+        </ul>
+    </div>
+    
+    <p>Please take action to restock this product to ensure uninterrupted service to your customers.</p>
+    
+    <div style="margin-top: 30px;">
+        <a href="{{ site_url }}{% url 'seller:stock_management' %}" 
+           style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            Manage Stock
+        </a>
+    </div>
+    
+    <p style="margin-top: 30px; color: #7f8c8d; font-size: 0.9em;">
+        Note: You will not receive another alert for this product for 24 hours.
+    </p>
+</div>
+{% endblock %}

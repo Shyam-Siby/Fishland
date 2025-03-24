@@ -1,0 +1,63 @@
+<ul class="navbar-nav me-auto">
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+           href="{% url 'seller:dashboard' %}">
+            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+        </a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name in 'products,add_product,edit_product' %}active{% endif %}" 
+           href="#" id="productsDropdown" role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-fish me-1"></i>Products
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item {% if request.resolver_match.url_name == 'products' %}active{% endif %}" 
+                   href="{% url 'seller:products' %}">
+                    <i class="fas fa-list me-1"></i>All Products
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item {% if request.resolver_match.url_name == 'add_product' %}active{% endif %}" 
+                   href="{% url 'seller:add_product' %}">
+                    <i class="fas fa-plus me-1"></i>Add Product
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#stock-management">
+                    <i class="fas fa-boxes me-1"></i>Stock Management
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'order_list' %}active{% endif %}" 
+           href="{% url 'seller:order_list' %}">
+            <i class="fas fa-shopping-cart me-1"></i>Orders
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" 
+           href="{% url 'seller:analytics' %}">
+            <i class="fas fa-chart-bar me-1"></i>Analytics
+        </a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+            <i class="fas fa-user me-1"></i>{{ user.get_full_name|default:user.email }}
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <a class="dropdown-item" href="{% url 'seller:profile' %}">
+                    <i class="fas fa-user-circle me-1"></i>Profile
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{% url 'account_logout' %}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

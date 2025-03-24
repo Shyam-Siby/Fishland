@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Login - FISHLAND
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url("{% static 'images/login.jpg' %}") no-repeat center center;
+    background-size: cover; /* Adjusts the image to cover the entire background */
+  }
+  .auth-card {
+    max-width: 400px;
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: #fff;
+  }
+  .auth-wrapper {
+    min-height: calc(100vh - 100px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+  .auth-card {
+    max-width: 400px;
+    width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: #fff;
+  }
+  .auth-header {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .auth-body {
+    padding: 2rem;
+  }
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 0.75rem;
+    font-weight: 500;
+  }
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="container">
+    <div class="auth-card mx-auto">
+      <div class="auth-header">
+        <h2>Welcome Back</h2>
+        <p class="text-muted">Sign in to continue to FISHLAND</p>
+      </div>
+      <div class="auth-body">
+        {% if messages %}
+        <div class="messages mb-4">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              name="email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              required
+            />
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Sign In</button>
+          </div>
+
+          <div class="text-center mt-3">
+            <a href="{% url 'accounts:password_reset' %}" class="text-muted"
+              >Forgot Password?</a
+            >
+          </div>
+        </form>
+
+        <div class="text-center mt-4">
+          <p class="mb-0">
+            Don't have an account?
+            <a href="{% url 'accounts:register' %}">Register as Buyer</a> |
+            <a href="{% url 'delivery:register' %}"
+              >Register as Delivery Partner</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

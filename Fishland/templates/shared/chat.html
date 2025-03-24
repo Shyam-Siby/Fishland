@@ -1,0 +1,461 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Messages - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row" style="height: calc(100vh - 72px);">
+        <!-- Chat List -->
+        <div class="col-md-4 col-lg-3 p-0 border-end">
+            <div class="d-flex flex-column h-100">
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Messages</h4>
+                        <button class="btn btn-primary btn-sm" onclick="startNewChat()">
+                            <i class="fas fa-plus me-1"></i>New Chat
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search chats..."
+                               onkeyup="searchChats(this.value)">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat List -->
+                <div class="overflow-auto flex-grow-1">
+                    <div class="list-group list-group-flush" id="chatList">
+                        {% for chat in chats %}
+                        <a href="#" class="list-group-item list-group-item-action {% if chat.id == active_chat.id %}active{% endif %}"
+                           onclick="loadChat('{{ chat.id }}')" id="chat-{{ chat.id }}">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    {% if chat.other_user.profile_image %}
+                                    <img src="{{ chat.other_user.profile_image.url }}" 
+                                         class="rounded-circle" alt="Profile"
+                                         style="width: 48px; height: 48px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                         style="width: 48px; height: 48px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                    {% if chat.other_user.is_online %}
+                                    <span class="position-absolute translate-middle p-2 bg-success border border-light rounded-circle">
+                                        <span class="visually-hidden">Online</span>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ chat.other_user.company_name }}</h6>
+                                        <small class="text-muted">{{ chat.last_message.created_at|timesince }}</small>
+                                    </div>
+                                    <p class="mb-0 small text-truncate">
+                                        {% if chat.last_message.is_image %}
+                                        <i class="fas fa-image me-1"></i>Image
+                                        {% else %}
+                                        {{ chat.last_message.content }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% if chat.unread_count > 0 %}
+                                <span class="badge bg-primary rounded-pill ms-2">
+                                    {{ chat.unread_count }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Content -->
+        <div class="col-md-8 col-lg-9 p-0">
+            {% if active_chat %}
+            <div class="d-flex flex-column h-100">
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            {% if active_chat.other_user.profile_image %}
+                            <img src="{{ active_chat.other_user.profile_image.url }}" 
+                                 class="rounded-circle me-2" alt="Profile"
+                                 style="width: 48px; height: 48px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                 style="width: 48px; height: 48px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">{{ active_chat.other_user.company_name }}</h5>
+                                <small class="text-muted">
+                                    {% if active_chat.other_user.is_online %}
+                                    <span class="text-success">Online</span>
+                                    {% else %}
+                                    Last seen {{ active_chat.other_user.last_seen|timesince }} ago
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="viewProfile()">
+                                        <i class="fas fa-user me-2"></i>View Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="searchMessages()">
+                                        <i class="fas fa-search me-2"></i>Search Messages
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="clearChat()">
+                                        <i class="fas fa-trash me-2"></i>Clear Chat
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" onclick="blockUser()">
+                                        <i class="fas fa-ban me-2"></i>Block User
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-grow-1 overflow-auto p-3" id="messageContainer">
+                    {% for message in messages %}
+                    <div class="chat-message {% if message.sender == request.user %}sent{% else %}received{% endif %} mb-3"
+                         id="message-{{ message.id }}">
+                        <div class="message-content">
+                            {% if message.is_image %}
+                            <a href="{{ message.image.url }}" data-lightbox="chat-images">
+                                <img src="{{ message.image.url }}" alt="Chat Image" 
+                                     class="img-fluid rounded mb-1" style="max-width: 300px;">
+                            </a>
+                            {% endif %}
+                            {% if message.content %}
+                            <p class="mb-0">{{ message.content }}</p>
+                            {% endif %}
+                            <div class="message-meta">
+                                <small class="text-muted">
+                                    {{ message.created_at|date:"g:i A" }}
+                                    {% if message.sender == request.user %}
+                                    <i class="fas fa-check-double {% if message.is_read %}text-primary{% endif %} ms-1"></i>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="p-3 border-top">
+                    <form id="messageForm" onsubmit="sendMessage(event)">
+                        <div class="input-group">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    onclick="document.getElementById('imageInput').click()">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <input type="file" id="imageInput" hidden accept="image/*" 
+                                   onchange="handleImageUpload(this)">
+                            <input type="text" class="form-control" placeholder="Type a message..."
+                                   id="messageInput" required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <!-- No Chat Selected -->
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                <h4>No Chat Selected</h4>
+                <p class="text-muted">Select a chat from the list or start a new conversation</p>
+                <button class="btn btn-primary" onclick="startNewChat()">
+                    <i class="fas fa-plus me-1"></i>Start New Chat
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- New Chat Modal -->
+<div class="modal fade" id="newChatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Start New Chat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="Search users..."
+                           onkeyup="searchUsers(this.value)">
+                </div>
+                <div id="usersList" class="list-group">
+                    <!-- Users will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Messages Modal -->
+<div class="modal fade" id="searchMessagesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Search Messages</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" placeholder="Search messages..."
+                           onkeyup="searchChatMessages(this.value)">
+                </div>
+                <div id="searchResults" class="list-group">
+                    <!-- Search results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-message {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+
+    .chat-message.sent {
+        justify-content: flex-end;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem;
+        border-radius: 1rem;
+        position: relative;
+    }
+
+    .chat-message.sent .message-content {
+        background-color: #007bff;
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .chat-message.received .message-content {
+        background-color: #f8f9fa;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .message-meta {
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .chat-message.sent .message-meta {
+        text-align: right;
+    }
+
+    .chat-message.received .message-meta {
+        text-align: left;
+    }
+
+    #messageContainer {
+        scroll-behavior: smooth;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // WebSocket Connection
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/{{ active_chat.id }}/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        handleWebSocketMessage(data);
+    };
+
+    // Handle WebSocket Messages
+    function handleWebSocketMessage(data) {
+        if (data.type === 'chat_message') {
+            appendMessage(data.message);
+        } else if (data.type === 'message_read') {
+            updateMessageStatus(data.message_id);
+        } else if (data.type === 'user_status') {
+            updateUserStatus(data.user_id, data.status);
+        }
+    }
+
+    // Send Message
+    function sendMessage(e) {
+        e.preventDefault();
+        const messageInput = document.getElementById('messageInput');
+        const content = messageInput.value.trim();
+        
+        if (content) {
+            chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
+                'content': content
+            }));
+            messageInput.value = '';
+        }
+    }
+
+    // Handle Image Upload
+    function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const formData = new FormData();
+            formData.append('image', input.files[0]);
+            
+            makeRequest('/api/chat/upload-image/', 'POST', formData)
+                .then(response => {
+                    chatSocket.send(JSON.stringify({
+                        'type': 'chat_message',
+                        'image_url': response.image_url
+                    }));
+                });
+        }
+    }
+
+    // Append New Message
+    function appendMessage(message) {
+        const container = document.getElementById('messageContainer');
+        const messageHtml = `
+            <div class="chat-message ${message.is_self ? 'sent' : 'received'} mb-3"
+                 id="message-${message.id}">
+                <div class="message-content">
+                    ${message.image_url ? `
+                        <a href="${message.image_url}" data-lightbox="chat-images">
+                            <img src="${message.image_url}" alt="Chat Image" 
+                                 class="img-fluid rounded mb-1" style="max-width: 300px;">
+                        </a>
+                    ` : ''}
+                    ${message.content ? `<p class="mb-0">${message.content}</p>` : ''}
+                    <div class="message-meta">
+                        <small class="text-muted">
+                            ${message.time}
+                            ${message.is_self ? `
+                                <i class="fas fa-check-double"></i>
+                            ` : ''}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', messageHtml);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Update Message Status
+    function updateMessageStatus(messageId) {
+        const message = document.getElementById(`message-${messageId}`);
+        if (message) {
+            const icon = message.querySelector('.fa-check-double');
+            if (icon) {
+                icon.classList.add('text-primary');
+            }
+        }
+    }
+
+    // Update User Status
+    function updateUserStatus(userId, status) {
+        const statusIndicator = document.querySelector(`#user-${userId} .status-indicator`);
+        if (statusIndicator) {
+            statusIndicator.className = `status-indicator ${status ? 'online' : 'offline'}`;
+        }
+    }
+
+    // Load Chat
+    function loadChat(chatId) {
+        window.location.href = `/chat/${chatId}/`;
+    }
+
+    // Search Chats
+    function searchChats(query) {
+        makeRequest(`/api/chat/search/?q=${query}`)
+            .then(response => {
+                document.getElementById('chatList').innerHTML = response.html;
+            });
+    }
+
+    // Start New Chat
+    function startNewChat() {
+        const modal = new bootstrap.Modal(document.getElementById('newChatModal'));
+        modal.show();
+    }
+
+    // Search Users
+    function searchUsers(query) {
+        makeRequest(`/api/users/search/?q=${query}`)
+            .then(response => {
+                document.getElementById('usersList').innerHTML = response.html;
+            });
+    }
+
+    // Search Chat Messages
+    function searchChatMessages(query) {
+        makeRequest(`/api/chat/{{ active_chat.id }}/search/?q=${query}`)
+            .then(response => {
+                document.getElementById('searchResults').innerHTML = response.html;
+            });
+    }
+
+    // View Profile
+    function viewProfile() {
+        window.location.href = '/profile/{{ active_chat.other_user.id }}/';
+    }
+
+    // Clear Chat
+    function clearChat() {
+        if (confirm('Are you sure you want to clear this chat? This cannot be undone.')) {
+            makeRequest('/api/chat/{{ active_chat.id }}/clear/', 'DELETE')
+                .then(response => {
+                    location.reload();
+                });
+        }
+    }
+
+    // Block User
+    function blockUser() {
+        if (confirm('Are you sure you want to block this user?')) {
+            makeRequest('/api/users/{{ active_chat.other_user.id }}/block/', 'POST')
+                .then(response => {
+                    window.location.href = '/chat/';
+                });
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('messageContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

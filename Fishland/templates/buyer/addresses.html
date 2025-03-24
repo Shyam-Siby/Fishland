@@ -1,0 +1,145 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}My Addresses - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Profile" 
+                                 class="rounded-circle" style="width: 50px;">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="nav flex-column nav-pills">
+                        <a class="nav-link" href="{% url 'buyer:dashboard' %}">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="{% url 'buyer:order_list' %}">
+                            <i class="fas fa-shopping-bag me-2"></i> My Orders
+                        </a>
+                        <a class="nav-link active" href="{% url 'buyer:addresses' %}">
+                            <i class="fas fa-map-marker-alt me-2"></i> Addresses
+                        </a>
+                        <a class="nav-link" href="{% url 'account_email' %}">
+                            <i class="fas fa-envelope me-2"></i> Email Settings
+                        </a>
+                        <a class="nav-link" href="{% url 'account_change_password' %}">
+                            <i class="fas fa-lock me-2"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">My Addresses</h5>
+                    <a href="{% url 'buyer:add_address' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Add New Address
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if addresses %}
+                        <div class="row">
+                            {% for address in addresses %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="card-subtitle text-muted">{{ address.label }}</h6>
+                                            {% if address.is_default %}
+                                                <span class="badge bg-primary">Default</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <p class="card-text">
+                                            {{ address.name }}<br>
+                                            {{ address.address_line1 }}<br>
+                                            {% if address.address_line2 %}
+                                                {{ address.address_line2 }}<br>
+                                            {% endif %}
+                                            {{ address.city }}, {{ address.state }}<br>
+                                            {{ address.pincode }}<br>
+                                            Phone: {{ address.phone }}
+                                        </p>
+                                        
+                                        <div class="btn-group">
+                                            <a href="{% url 'buyer:edit_address' address.pk %}" 
+                                               class="btn btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger"
+                                                    onclick="confirmDelete({{ address.pk }})">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                            <h5>No Addresses Saved</h5>
+                            <p class="text-muted">Add a delivery address to get started.</p>
+                            <a href="{% url 'buyer:add_address' %}" class="btn btn-primary">
+                                Add Address
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this address?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete(addressId) {
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const form = document.getElementById('deleteForm');
+        form.action = `/buyer/addresses/${addressId}/delete/`;
+        modal.show();
+    }
+</script>
+{% endblock %}

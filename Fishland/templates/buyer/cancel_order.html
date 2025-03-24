@@ -1,0 +1,46 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Cancel Order #{{ order.order_number }} - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Cancel Order #{{ order.order_number }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">Are you sure you want to cancel this order?</h6>
+                        <p class="mb-0">This action cannot be undone. The order will be permanently cancelled.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Order Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y" }}</li>
+                            <li><strong>Total Amount:</strong> ₹{{ order.total }}</li>
+                            <li><strong>Status:</strong> {{ order.get_status_display }}</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                Yes, Cancel Order
+                            </button>
+                            <a href="{% url 'buyer:order_detail' order.order_number %}" 
+                               class="btn btn-outline-secondary">
+                                No, Keep Order
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

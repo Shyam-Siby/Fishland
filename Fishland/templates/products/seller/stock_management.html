@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stock Management - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Stock Management</h1>
+        <a href="{% url 'products:seller_dashboard' %}" class="btn btn-outline-primary">
+            Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Filters and Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="q" class="form-control" placeholder="Search products..." 
+                           value="{{ search_query|default:'' }}">
+                </div>
+                <div class="col-md-4">
+                    <select name="stock_status" class="form-select">
+                        <option value="">All Stock Status</option>
+                        <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock</option>
+                        <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    {% if search_query or stock_filter %}
+                        <a href="{% url 'products:stock_management' %}" class="btn btn-outline-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Products Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if products %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Alert Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                         class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {{ product.name }}
+                                </td>
+                                <td>{{ product.category.name }}</td>
+                                <td>
+                                    <span class="badge {% if product.stock_quantity == 0 %}bg-danger{% elif product.stock_quantity <= 10 %}bg-warning{% else %}bg-success{% endif %}">
+                                        {{ product.stock_quantity }}kg
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if product.stock_alert %}
+                                        {% if product.stock_alert.is_active %}
+                                            <span class="badge bg-info">Alert at {{ product.stock_alert.threshold_quantity }}kg</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Alert Disabled</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Alert Set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'products:update_stock' product.id %}" 
+                                           class="btn btn-sm btn-primary">Update Stock</a>
+                                        <a href="{% url 'products:manage_stock_alerts' product.id %}" 
+                                           class="btn btn-sm btn-outline-primary">Manage Alerts</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if products.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if stock_filter %}&stock_status={{ stock_filter }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in products.paginator.page_range %}
+                            {% if products.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if stock_filter %}&stock_status={{ stock_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if stock_filter %}&stock_status={{ stock_filter }}{% endif %}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <p class="text-muted text-center">No products found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

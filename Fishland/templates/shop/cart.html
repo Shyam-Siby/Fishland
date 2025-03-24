@@ -1,0 +1,265 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Shopping Cart ({{ cart_items|length }} items)</h5>
+                </div>
+                <div class="card-body">
+                    {% if cart_items %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price/kg</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
+                                                 class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                            <div>
+                                                <h6 class="mb-1">{{ item.product.name }}</h6>
+                                                <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
+                                                <small class="text-muted">Seller: {{ item.product.seller.company_name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₹{{ item.product.price_per_kg }}</td>
+                                    <td style="width: 150px;">
+                                        <div class="input-group">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    onclick="updateCartQuantity('{{ item.product.id }}', -1)">-</button>
+                                            <input type="number" class="form-control text-center" 
+                                                   id="qty{{ item.product.id }}" value="{{ item.quantity }}"
+                                                   min="1" max="{{ item.product.stock_quantity }}"
+                                                   onchange="updateCartQuantity('{{ item.product.id }}', 0)">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                    onclick="updateCartQuantity('{{ item.product.id }}', 1)">+</button>
+                                        </div>
+                                    </td>
+                                    <td>₹{{ item.total_price }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="removeFromCart('{{ item.product.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                        <h4>Your Cart is Empty</h4>
+                        <p class="text-muted">Add some products to your cart and they will show up here</p>
+                        <a href="{% url 'shop:products' %}" class="btn btn-primary">
+                            Continue Shopping
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            {% if cart_items %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{% url 'shop:products' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i>Continue Shopping
+                </a>
+                <button class="btn btn-danger" onclick="clearCart()">
+                    <i class="fas fa-trash me-1"></i>Clear Cart
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Order Summary -->
+        {% if cart_items %}
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>₹{{ cart_subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>GST (18%)</span>
+                        <span>₹{{ cart_tax }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>₹{{ shipping_cost }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total</strong>
+                        <strong>₹{{ cart_total }}</strong>
+                    </div>
+
+                    <!-- Delivery Information -->
+                    <form id="checkoutForm" class="mb-3">
+                        <h6>Delivery Information</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Delivery Address</label>
+                            <textarea class="form-control" name="delivery_address" rows="3" required>{{ user.default_address }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Preferred Delivery Date</label>
+                            <input type="date" class="form-control" name="delivery_date" required
+                                   min="{{ min_delivery_date|date:'Y-m-d' }}"
+                                   max="{{ max_delivery_date|date:'Y-m-d' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Special Instructions</label>
+                            <textarea class="form-control" name="special_instructions" rows="2"></textarea>
+                        </div>
+                    </form>
+
+                    <!-- Payment Options -->
+                    <div class="mb-3">
+                        <h6>Payment Method</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="payment_method" 
+                                   id="paymentCOD" value="cod" checked>
+                            <label class="form-check-label" for="paymentCOD">
+                                Cash on Delivery
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="payment_method" 
+                                   id="paymentOnline" value="online">
+                            <label class="form-check-label" for="paymentOnline">
+                                Online Payment
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" 
+                                   id="paymentBank" value="bank">
+                            <label class="form-check-label" for="paymentBank">
+                                Bank Transfer
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100" onclick="proceedToCheckout()">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Clear Cart Confirmation Modal -->
+<div class="modal fade" id="clearCartModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Clear Cart</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove all items from your cart?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmClearCart()">
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateCartQuantity(productId, change) {
+        const input = document.getElementById(`qty${productId}`);
+        let quantity = parseInt(input.value);
+        
+        if (change !== 0) {
+            quantity += change;
+            quantity = Math.max(1, Math.min(quantity, parseInt(input.max)));
+            input.value = quantity;
+        }
+
+        makeRequest('/api/cart/update/', 'POST', {
+            product_id: productId,
+            quantity: quantity
+        }).then(response => {
+            location.reload();
+        });
+    }
+
+    function removeFromCart(productId) {
+        if (confirm('Remove this item from cart?')) {
+            makeRequest('/api/cart/remove/', 'POST', {
+                product_id: productId
+            }).then(response => {
+                location.reload();
+            });
+        }
+    }
+
+    function clearCart() {
+        const modal = new bootstrap.Modal(document.getElementById('clearCartModal'));
+        modal.show();
+    }
+
+    function confirmClearCart() {
+        makeRequest('/api/cart/clear/', 'POST')
+            .then(response => {
+                location.reload();
+            });
+    }
+
+    function proceedToCheckout() {
+        const form = document.getElementById('checkoutForm');
+        const formData = new FormData(form);
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        formData.append('payment_method', paymentMethod);
+
+        makeRequest('/api/orders/create/', 'POST', Object.fromEntries(formData))
+            .then(response => {
+                if (paymentMethod === 'online') {
+                    // Redirect to payment gateway
+                    window.location.href = response.payment_url;
+                } else {
+                    // Redirect to order confirmation
+                    window.location.href = `/orders/${response.order_id}/`;
+                }
+            });
+    }
+
+    // Set minimum delivery date to tomorrow
+    const deliveryDateInput = document.querySelector('input[name="delivery_date"]');
+    if (deliveryDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        deliveryDateInput.min = tomorrow.toISOString().split('T')[0];
+    }
+</script>
+{% endblock %}

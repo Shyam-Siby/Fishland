@@ -1,0 +1,279 @@
+{% load static %}
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Customer Reviews</h4>
+    </div>
+    <div class="card-body">
+        <!-- Rating Summary -->
+        <div class="row align-items-center mb-4">
+            <div class="col-md-4 text-center">
+                <h1 class="display-4 mb-2">{{ product.average_rating|floatformat:1 }}</h1>
+                <div class="mb-2">
+                    {% for i in "12345"|make_list %}
+                    <i class="fas fa-star{% if forloop.counter <= product.average_rating %} text-warning{% else %} text-muted{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <p class="text-muted mb-0">{{ product.total_reviews }} reviews</p>
+            </div>
+            <div class="col-md-8">
+                {% for rating in rating_distribution %}
+                <div class="d-flex align-items-center mb-2">
+                    <div class="me-2" style="width: 60px;">
+                        {{ rating.stars }} stars
+                    </div>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                        <div class="progress-bar bg-warning" role="progressbar" 
+                             style="width: {{ rating.percentage }}%"></div>
+                    </div>
+                    <div class="ms-2" style="width: 40px;">
+                        {{ rating.count }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Review Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                {% if can_review %}
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                    <i class="fas fa-star me-1"></i>Write a Review
+                </button>
+                {% endif %}
+                <a href="{% url 'shop:product_reviews' product.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i>View All Reviews
+                </a>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown">
+                    Sort by: {{ sort_options|get_item:current_sort }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% for key, value in sort_options.items %}
+                    <li>
+                        <a class="dropdown-item{% if current_sort == key %} active{% endif %}" 
+                           href="?sort={{ key }}">
+                            {{ value }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recent Reviews -->
+        {% if recent_reviews %}
+        <div class="reviews-list">
+            {% for review in recent_reviews %}
+            <div class="border-bottom pb-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="mb-2">
+                            {% for i in "12345"|make_list %}
+                            <i class="fas fa-star{% if forloop.counter <= review.rating %} text-warning{% else %} text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <h5 class="mb-1">{{ review.title }}</h5>
+                        <div class="text-muted small mb-2">
+                            by {{ review.user.get_full_name }} on {{ review.created_at|date:"M d, Y" }}
+                            {% if review.is_verified_purchase %}
+                            <span class="badge bg-success ms-2">Verified Purchase</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="markHelpful('{{ review.id }}')">
+                        <i class="fas fa-thumbs-up me-1"></i>Helpful ({{ review.helpful_count }})
+                    </button>
+                </div>
+
+                <p class="mb-3">{{ review.content }}</p>
+
+                {% if review.images.all %}
+                <div class="review-images mb-3">
+                    <div class="row g-2">
+                        {% for image in review.images.all %}
+                        <div class="col-auto">
+                            <a href="{{ image.image.url }}" data-lightbox="review-{{ review.id }}">
+                                <img src="{{ image.image.url }}" alt="Review Image" 
+                                     class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if review.seller_response %}
+                <div class="bg-light p-3 rounded">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-store text-primary fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">Seller Response</h6>
+                            <small class="text-muted d-block mb-2">
+                                {{ review.seller_response_date|date:"M d, Y" }}
+                            </small>
+                            <p class="mb-0">{{ review.seller_response }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+            <h5>No Reviews Yet</h5>
+            <p class="text-muted mb-4">Be the first to review this product</p>
+            {% if can_review %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                <i class="fas fa-star me-1"></i>Write a Review
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating">
+                            {% for i in "54321"|make_list %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" required>
+                            <label for="star{{ i }}">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Review Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Review Title</label>
+                        <input type="text" class="form-control" name="title" required
+                               maxlength="100" placeholder="Summarize your experience">
+                    </div>
+
+                    <!-- Review Content -->
+                    <div class="mb-3">
+                        <label class="form-label">Your Review</label>
+                        <textarea class="form-control" name="content" rows="4" required
+                                  maxlength="1000" placeholder="Share your experience with this product"></textarea>
+                        <small class="text-muted">Maximum 1000 characters</small>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="mb-3">
+                        <label class="form-label">Add Photos (optional)</label>
+                        <input type="file" class="form-control" name="images" multiple
+                               accept="image/*" data-max-files="5">
+                        <small class="text-muted">You can upload up to 5 images</small>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="imagePreview" class="row g-2"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 0.3rem;
+        font-size: 1.5rem;
+        justify-content: flex-end;
+    }
+
+    .rating input {
+        display: none;
+    }
+
+    .rating label {
+        cursor: pointer;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+
+    .rating input:checked ~ label,
+    .rating label:hover,
+    .rating label:hover ~ label {
+        color: #ffc107;
+    }
+
+    .rating label:hover,
+    .rating label:hover ~ label {
+        color: #ffdb70;
+    }
+</style>
+
+<script>
+    // Image Preview
+    document.querySelector('input[name="images"]').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        if (this.files.length > 5) {
+            showToast('You can only upload up to 5 images', 'warning');
+            this.value = '';
+            return;
+        }
+
+        Array.from(this.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'col-auto';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" 
+                         class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                `;
+                preview.appendChild(div);
+            }
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Submit Review
+    function submitReview() {
+        const form = document.getElementById('reviewForm');
+        const formData = new FormData(form);
+        
+        makeRequest('/api/products/{{ product.id }}/reviews/', 'POST', formData)
+            .then(response => {
+                showToast('Review submitted successfully');
+                location.reload();
+            });
+    }
+
+    // Mark Review as Helpful
+    function markHelpful(reviewId) {
+        makeRequest(`/api/reviews/${reviewId}/helpful/`, 'POST')
+            .then(response => {
+                showToast('Thank you for your feedback');
+                location.reload();
+            });
+    }
+</script>

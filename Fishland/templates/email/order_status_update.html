@@ -1,0 +1,34 @@
+{% extends "email/base_email.html" %}
+
+{% block content %}
+<h2>Order Status Update</h2>
+
+<p>Dear {{ user.get_full_name }},</p>
+
+<p>The status of your order #{{ order.order_number }} has been updated.</p>
+
+<div class="info">
+    <p><strong>New Status:</strong> {{ status }}</p>
+    <p><strong>Order Number:</strong> #{{ order.order_number }}</p>
+    <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+</div>
+
+{% if order.status == 'SHIPPED' and order.shipment %}
+<div class="info">
+    <h3>Shipment Details:</h3>
+    <p><strong>Tracking Number:</strong> {{ order.shipment.tracking_number }}</p>
+    <p><strong>Carrier:</strong> {{ order.shipment.carrier }}</p>
+    <p><strong>Estimated Delivery:</strong> {{ order.shipment.estimated_delivery|date:"F j, Y" }}</p>
+</div>
+
+<p>You can track your shipment using the tracking number above.</p>
+{% endif %}
+
+<p>You can view your order details by clicking the button below:</p>
+
+<a href="https://your-domain.com/orders/{{ order.order_number }}" class="button">View Order</a>
+
+<p>If you have any questions about your order, please don't hesitate to contact us.</p>
+
+<p>Thank you for shopping with FISHLAND!</p>
+{% endblock %}

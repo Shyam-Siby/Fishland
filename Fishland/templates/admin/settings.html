@@ -1,0 +1,318 @@
+{% extends "shared/base.html" %}
+
+{% block title %}Admin Settings{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-3">
+            <!-- Settings Navigation -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                        <button class="nav-link active mb-2" data-bs-toggle="pill" data-bs-target="#general" type="button">
+                            <i class="fas fa-cog me-2"></i>General Settings
+                        </button>
+                        <button class="nav-link mb-2" data-bs-toggle="pill" data-bs-target="#email" type="button">
+                            <i class="fas fa-envelope me-2"></i>Email Settings
+                        </button>
+                        <button class="nav-link mb-2" data-bs-toggle="pill" data-bs-target="#payment" type="button">
+                            <i class="fas fa-credit-card me-2"></i>Payment Gateway
+                        </button>
+                        <button class="nav-link mb-2" data-bs-toggle="pill" data-bs-target="#security" type="button">
+                            <i class="fas fa-shield-alt me-2"></i>Security
+                        </button>
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#maintenance" type="button">
+                            <i class="fas fa-tools me-2"></i>Maintenance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'admin:update_general_settings' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Site Information</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Site Name</label>
+                                        <input type="text" class="form-control" name="site_name" value="{{ settings.site_name }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Site Description</label>
+                                        <textarea class="form-control" name="site_description" rows="3">{{ settings.site_description }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Site Logo</label>
+                                        <input type="file" class="form-control" name="site_logo" accept="image/*">
+                                        {% if settings.site_logo %}
+                                        <small class="text-muted">Current logo: {{ settings.site_logo_filename }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Contact Information</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Support Email</label>
+                                        <input type="email" class="form-control" name="support_email" value="{{ settings.support_email }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Support Phone</label>
+                                        <input type="tel" class="form-control" name="support_phone" value="{{ settings.support_phone }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Social Media Links</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Facebook</label>
+                                        <input type="url" class="form-control" name="facebook_url" value="{{ settings.facebook_url }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Twitter</label>
+                                        <input type="url" class="form-control" name="twitter_url" value="{{ settings.twitter_url }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Instagram</label>
+                                        <input type="url" class="form-control" name="instagram_url" value="{{ settings.instagram_url }}">
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save General Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Email Settings -->
+                <div class="tab-pane fade" id="email">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Email Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'admin:update_email_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>SMTP Configuration</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Host</label>
+                                        <input type="text" class="form-control" name="smtp_host" value="{{ email_settings.smtp_host }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Port</label>
+                                        <input type="number" class="form-control" name="smtp_port" value="{{ email_settings.smtp_port }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Username</label>
+                                        <input type="text" class="form-control" name="smtp_username" value="{{ email_settings.smtp_username }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Password</label>
+                                        <input type="password" class="form-control" name="smtp_password">
+                                        <small class="text-muted">Leave blank to keep current password</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Email Templates</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Order Confirmation Template</label>
+                                        <textarea class="form-control" name="order_confirmation_template" rows="5">{{ email_settings.order_confirmation_template }}</textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Welcome Email Template</label>
+                                        <textarea class="form-control" name="welcome_template" rows="5">{{ email_settings.welcome_template }}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Gateway Settings -->
+                <div class="tab-pane fade" id="payment">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment Gateway Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'admin:update_payment_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Razorpay Configuration</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">API Key</label>
+                                        <input type="text" class="form-control" name="razorpay_key" value="{{ payment_settings.razorpay_key }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">API Secret</label>
+                                        <input type="password" class="form-control" name="razorpay_secret">
+                                        <small class="text-muted">Leave blank to keep current secret</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Payment Methods</h6>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="enableCOD" name="enable_cod" {% if payment_settings.enable_cod %}checked{% endif %}>
+                                        <label class="form-check-label" for="enableCOD">Enable Cash on Delivery</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="enableCards" name="enable_cards" {% if payment_settings.enable_cards %}checked{% endif %}>
+                                        <label class="form-check-label" for="enableCards">Enable Credit/Debit Cards</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="enableUPI" name="enable_upi" {% if payment_settings.enable_upi %}checked{% endif %}>
+                                        <label class="form-check-label" for="enableUPI">Enable UPI</label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Payment Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Security Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'admin:update_security_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Password Policy</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Minimum Password Length</label>
+                                        <input type="number" class="form-control" name="min_password_length" value="{{ security_settings.min_password_length }}">
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="requireSpecialChar" name="require_special_char" {% if security_settings.require_special_char %}checked{% endif %}>
+                                        <label class="form-check-label" for="requireSpecialChar">Require Special Characters</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="requireNumbers" name="require_numbers" {% if security_settings.require_numbers %}checked{% endif %}>
+                                        <label class="form-check-label" for="requireNumbers">Require Numbers</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Login Security</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Maximum Login Attempts</label>
+                                        <input type="number" class="form-control" name="max_login_attempts" value="{{ security_settings.max_login_attempts }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Lockout Duration (minutes)</label>
+                                        <input type="number" class="form-control" name="lockout_duration" value="{{ security_settings.lockout_duration }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Session Security</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Session Timeout (minutes)</label>
+                                        <input type="number" class="form-control" name="session_timeout" value="{{ security_settings.session_timeout }}">
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" class="form-check-input" id="enforceHttps" name="enforce_https" {% if security_settings.enforce_https %}checked{% endif %}>
+                                        <label class="form-check-label" for="enforceHttps">Enforce HTTPS</label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Security Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Maintenance Settings -->
+                <div class="tab-pane fade" id="maintenance">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Maintenance Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'admin:update_maintenance_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Maintenance Mode</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="maintenanceMode" name="maintenance_mode" {% if maintenance_settings.maintenance_mode %}checked{% endif %}>
+                                        <label class="form-check-label" for="maintenanceMode">Enable Maintenance Mode</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Maintenance Message</label>
+                                        <textarea class="form-control" name="maintenance_message" rows="3">{{ maintenance_settings.maintenance_message }}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Backup Settings</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Backup Frequency (days)</label>
+                                        <input type="number" class="form-control" name="backup_frequency" value="{{ maintenance_settings.backup_frequency }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Backup Storage Path</label>
+                                        <input type="text" class="form-control" name="backup_path" value="{{ maintenance_settings.backup_path }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>System Cleanup</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Log Retention Period (days)</label>
+                                        <input type="number" class="form-control" name="log_retention" value="{{ maintenance_settings.log_retention }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Temporary File Cleanup (days)</label>
+                                        <input type="number" class="form-control" name="temp_file_cleanup" value="{{ maintenance_settings.temp_file_cleanup }}">
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Maintenance Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+    
+    // Handle maintenance mode toggle
+    document.getElementById('maintenanceMode').addEventListener('change', function(e) {
+        if (e.target.checked) {
+            if (!confirm('Are you sure you want to enable maintenance mode? This will make the site inaccessible to regular users.')) {
+                e.target.checked = false;
+                return;
+            }
+        }
+    });
+</script>
+{% endblock %}

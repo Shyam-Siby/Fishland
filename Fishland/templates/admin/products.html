@@ -1,0 +1,618 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Products Management
+- FISHLAND{% endblock %} {% block extra_css %}
+<link
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    --primary-light: #ffe0e0;
+    --secondary-light: #e8f5e9;
+    --accent-light: #e3f2fd;
+    --success-light: #f1f8e9;
+    --warning-light: #fff3e0;
+    --font-heading: "Playfair Display", serif;
+    --font-body: "Poppins", sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #f8f9fa;
+  }
+
+  .products-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .page-title {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: #1a237e;
+    margin: 2rem 0;
+    text-align: center;
+    background: linear-gradient(45deg, #1a237e, #3949ab);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .search-box {
+    flex: 1;
+    max-width: 300px;
+    margin-right: 1rem;
+  }
+
+  .search-box input {
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    width: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .search-box input:focus {
+    border-color: #1a237e;
+    box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.1);
+  }
+
+  .btn-add-product {
+    background: linear-gradient(45deg, #1a237e, #3949ab);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-add-product:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .product-content {
+    padding: 1.5rem;
+  }
+
+  .product-title {
+    font-weight: 600;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  .product-price {
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .product-stock {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .stock-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .stock-badge.in-stock {
+    background-color: var(--success-light);
+    color: #2e7d32;
+  }
+
+  .stock-badge.low-stock {
+    background-color: var(--warning-light);
+    color: #f57c00;
+  }
+
+  .stock-badge.out-stock {
+    background-color: var(--primary-light);
+    color: #d32f2f;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    color: #1a237e;
+    background: #f5f5f5;
+    transition: all 0.3s ease;
+  }
+
+  .action-btn:hover {
+    background: var(--accent-light);
+  }
+
+  .modal-content {
+    border-radius: 20px;
+    border: none;
+  }
+
+  .modal-header {
+    background: linear-gradient(45deg, #1a237e, #3949ab);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem;
+  }
+
+  .modal-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .form-label {
+    color: #1a237e;
+    font-weight: 500;
+  }
+
+  .form-control {
+    border-radius: 10px;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+  }
+
+  .form-control:focus {
+    border-color: #1a237e;
+    box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.1);
+  }
+
+  .btn-modal {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-modal.primary {
+    background: linear-gradient(45deg, #1a237e, #3949ab);
+    color: white;
+    border: none;
+  }
+
+  .btn-modal.secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: none;
+  }
+
+  .pagination {
+    margin-top: 2rem;
+  }
+
+  .page-link {
+    color: #1a237e;
+    border: none;
+    padding: 0.75rem 1rem;
+    margin: 0 0.25rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .page-link:hover {
+    background-color: var(--primary-light);
+    color: #1a237e;
+    transform: translateY(-2px);
+  }
+
+  .page-item.active .page-link {
+    background: linear-gradient(45deg, #1a237e, #3949ab);
+    border: none;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="products-container">
+  <h1 class="page-title">Products Management</h1>
+
+  <div class="action-bar">
+    <div class="search-box">
+      <input type="text" placeholder="Search products..." id="searchProducts" />
+    </div>
+    <button
+      class="btn-add-product"
+      data-bs-toggle="modal"
+      data-bs-target="#addProductModal"
+    >
+      <i class="fas fa-plus"></i>
+      Add New Product
+    </button>
+  </div>
+
+  <div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+      <img
+        src="{{ product.image.url }}"
+        alt="{{ product.name }}"
+        class="product-image"
+      />
+      <div class="product-content">
+        <h3 class="product-title">{{ product.name }}</h3>
+        <div class="product-price">₹{{ product.price_per_kg }}/kg</div>
+        <div class="product-stock">
+          <span
+            class="stock-badge {% if product.stock_quantity > 10 %}in-stock{% elif product.stock_quantity > 0 %}low-stock{% else %}out-stock{% endif %}"
+          >
+            {% if product.stock_quantity > 10 %} In Stock {% elif product.stock_quantity > 0 %} Low Stock {% else %} Out of Stock {% endif %}
+          </span>
+          <span>{{ product.stock_quantity }} kg</span>
+        </div>
+        <div class="product-actions">
+          <button class="action-btn" onclick="viewProduct('{{ product.id }}')">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="action-btn" onclick="editProduct('{{ product.id }}')">
+            <i class="fas fa-edit"></i>
+          </button>
+          {% if not product.is_approved %}
+          <button
+            class="action-btn"
+            onclick="approveProduct('{{ product.id }}', '{{ product.name }}')"
+          >
+            <i class="fas fa-check"></i>
+          </button>
+          <button
+            class="action-btn"
+            onclick="showRejectModal('{{ product.id }}', '{{ product.name }}')"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+      <p class="text-muted">No products found</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if products.has_other_pages %}
+  <nav>
+    <ul class="pagination justify-content-center">
+      {% if products.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ products.previous_page_number }}">
+          <i class="fas fa-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %} {% for num in products.paginator.page_range %}
+      <li class="page-item {% if products.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+      </li>
+      {% endfor %} {% if products.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ products.next_page_number }}">
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Product</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <form
+        action="{% url 'admin_dashboard:products' %}"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Product Name</label>
+            <input type="text" class="form-control" name="name" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea
+              class="form-control"
+              name="description"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Seller</label>
+            <select class="form-select" name="seller" required>
+              <option value="">Select Seller</option>
+              {% for seller in sellers %}
+              <option value="{{ seller.id }}">
+                {{ seller.get_full_name|default:seller.email }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select class="form-select" name="category" required>
+              <option value="">Select Category</option>
+              {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Price per KG</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="price_per_kg"
+                    step="0.01"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Stock Quantity (KG)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  name="stock_quantity"
+                  step="0.01"
+                  min="0"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Product Image</label>
+            <input
+              type="file"
+              class="form-control"
+              name="image"
+              accept="image/*"
+              required
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn-modal primary">Add Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Product Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Product</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <form onsubmit="return rejectProduct(this)">
+        <div class="modal-body">
+          <input type="hidden" name="product_id" id="rejectProductId" />
+          <p>
+            Are you sure you want to reject
+            <span id="rejectProductName"></span>?
+          </p>
+          <div class="mb-3">
+            <label class="form-label">Reason for Rejection</label>
+            <textarea
+              class="form-control"
+              name="reason"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="btn-modal primary">
+            Reject Product
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function approveProduct(productId, productName) {
+    if (confirm(`Are you sure you want to approve "${productName}"?`)) {
+      const csrftoken = getCookie("csrftoken");
+      fetch(`/admin_dashboard/products/${productId}/approve/`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.text().then((text) => {
+              console.error("Server response:", text);
+              throw new Error(`HTTP error! status: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.status === "success") {
+            alert(data.message);
+            location.reload();
+          } else {
+            alert(data.message || "Error approving product");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Error approving product. Please try again.");
+        });
+    }
+  }
+
+  function showRejectModal(productId, productName) {
+    // Set product info in modal
+    document.getElementById("rejectProductId").value = productId;
+    document.getElementById("rejectProductName").textContent = productName;
+
+    // Show modal
+    var modal = new bootstrap.Modal(document.getElementById("rejectModal"));
+    modal.show();
+  }
+
+  function rejectProduct(form) {
+    event.preventDefault();
+
+    const productId = document.getElementById("rejectProductId").value;
+    const reason = document.getElementById("rejectionReason").value;
+
+    if (!reason.trim()) {
+      alert("Please provide a reason for rejection");
+      return;
+    }
+
+    fetch(`/admin/products/${productId}/reject/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({
+        reason: reason,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status === "success") {
+          // Show success message
+          alert(data.message);
+          // Close modal
+          bootstrap.Modal.getInstance(
+            document.getElementById("rejectModal")
+          ).hide();
+          // Reload the page to show updated status
+          location.reload();
+        } else {
+          alert(data.message || "Error rejecting product");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("Error rejecting product. Please try again.");
+      });
+  }
+
+  function viewProduct(productId) {
+    // Implement view product functionality
+    alert("View product details - To be implemented");
+  }
+</script>
+{% endblock %}

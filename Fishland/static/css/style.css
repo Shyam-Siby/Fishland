@@ -1,0 +1,151 @@
+/* General Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navigation */
+.navbar-brand i {
+    color: #fff;
+}
+
+/* Cards */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Statistics Cards */
+.stat-card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card h2 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-card small {
+    opacity: 0.8;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 500;
+}
+
+/* Buttons */
+.btn-group {
+    gap: 0.25rem;
+}
+
+/* Modals */
+.modal-header {
+    background-color: #f8f9fa;
+}
+
+/* Custom Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Charts */
+canvas {
+    max-width: 100%;
+}
+
+/* Message Alerts */
+.message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 350px;
+}
+
+.message-container .alert {
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.alert .btn-close {
+    padding: 0.75rem;
+}

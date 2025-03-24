@@ -1,0 +1,155 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Edit Review for Order #{{ order.order_number }} - FISHLAND{% endblock %}
+
+{% block extra_css %}
+<style>
+    .star-rating {
+        font-size: 2em;
+        color: #ffd700;
+        cursor: pointer;
+    }
+    .star-rating .star {
+        display: inline-block;
+        transition: transform 0.2s;
+    }
+    .star-rating .star:hover {
+        transform: scale(1.2);
+    }
+    .star-rating .star.selected,
+    .star-rating .star:hover,
+    .star-rating .star:hover ~ .star {
+        color: #ffd700;
+    }
+    .star-rating[data-rating="0"] .star {
+        color: #ccc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Breadcrumb -->
+        <div class="col-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'buyer:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'buyer:order_list' %}">Orders</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'buyer:order_detail' order.order_number %}">Order #{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Edit Review</li>
+                </ol>
+            </nav>
+        </div>
+        
+        <!-- Review Form -->
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Your Review</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Order Summary -->
+                    <div class="mb-4">
+                        <h6>Order Summary</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td>{{ item.product.name }}</td>
+                                        <td>{{ item.quantity }} kg</td>
+                                        <td class="text-end">₹{{ item.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-end"><strong>Grand Total</strong></td>
+                                        <td class="text-end"><strong>₹{{ order.total }}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Review Form -->
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <!-- Rating -->
+                        <div class="mb-4 text-center">
+                            <label class="form-label d-block">Your Rating</label>
+                            <div class="star-rating" data-rating="{{ review.rating }}">
+                                <span class="star" data-value="1">★</span>
+                                <span class="star" data-value="2">★</span>
+                                <span class="star" data-value="3">★</span>
+                                <span class="star" data-value="4">★</span>
+                                <span class="star" data-value="5">★</span>
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" value="{{ review.rating }}">
+                        </div>
+                        
+                        <!-- Comment -->
+                        <div class="mb-4">
+                            <label for="comment" class="form-label">Your Review</label>
+                            <textarea name="comment" id="comment" rows="5" class="form-control" 
+                                      placeholder="Share your experience with this order...">{{ review.comment }}</textarea>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="text-end">
+                            <a href="{% url 'buyer:order_detail' order.order_number %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Review</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const starRating = document.querySelector('.star-rating');
+    const stars = starRating.querySelectorAll('.star');
+    const ratingInput = document.getElementById('ratingInput');
+    
+    // Set initial state
+    const initialRating = starRating.dataset.rating;
+    stars.forEach(s => {
+        if (s.dataset.value <= initialRating) {
+            s.classList.add('selected');
+        }
+    });
+    
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const value = this.dataset.value;
+            ratingInput.value = value;
+            starRating.dataset.rating = value;
+            
+            stars.forEach(s => {
+                if (s.dataset.value <= value) {
+                    s.classList.add('selected');
+                } else {
+                    s.classList.remove('selected');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

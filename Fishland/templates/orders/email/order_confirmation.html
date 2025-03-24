@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Order Confirmation</title>
+    <style>
+        @media only screen and (max-width: 620px) {
+            table.body h1 {
+                font-size: 28px !important;
+                margin-bottom: 10px !important;
+            }
+            table.body p,
+            table.body ul,
+            table.body ol,
+            table.body td,
+            table.body span,
+            table.body a {
+                font-size: 16px !important;
+            }
+            table.body .wrapper,
+            table.body .article {
+                padding: 10px !important;
+            }
+            table.body .content {
+                padding: 0 !important;
+            }
+            table.body .container {
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            table.body .main {
+                border-left-width: 0 !important;
+                border-radius: 0 !important;
+                border-right-width: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body style="background-color: #f6f6f6; font-family: sans-serif; -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 1.4; margin: 0; padding: 0; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body" style="border-collapse: separate; background-color: #f6f6f6; width: 100%;">
+        <tr>
+            <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">&nbsp;</td>
+            <td class="container" style="font-family: sans-serif; font-size: 14px; vertical-align: top; display: block; max-width: 580px; padding: 10px; width: 580px; margin: 0 auto;">
+                <div class="content" style="box-sizing: border-box; display: block; margin: 0 auto; max-width: 580px; padding: 10px;">
+                    <!-- START CENTERED WHITE CONTAINER -->
+                    <table role="presentation" class="main" style="border-collapse: separate; background: #ffffff; border-radius: 3px; width: 100%;">
+                        <!-- START MAIN CONTENT AREA -->
+                        <tr>
+                            <td class="wrapper" style="font-family: sans-serif; font-size: 14px; vertical-align: top; box-sizing: border-box; padding: 20px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: 100%;">
+                                    <tr>
+                                        <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">
+                                            <h1 style="color: #000000; font-family: sans-serif; font-weight: 300; line-height: 1.4; margin: 0; margin-bottom: 30px; font-size: 35px; text-align: center;">Order Confirmation</h1>
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Dear {{ order.user.get_full_name }},</p>
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Thank you for your order! We're pleased to confirm that we've received your order and it's being processed.</p>
+                                            
+                                            <h2 style="color: #000000; font-family: sans-serif; font-weight: 400; line-height: 1.4; margin: 0; margin-bottom: 15px; font-size: 18px;">Order Details</h2>
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+                                                <strong>Order Number:</strong> {{ order.order_number }}<br>
+                                                <strong>Order Date:</strong> {{ order.created_at|date:"F j, Y" }}<br>
+                                                <strong>Delivery Slot:</strong> {{ order.delivery_slot|date:"F j, Y g:i A" }}<br>
+                                                <strong>Payment Method:</strong> {{ order.get_payment_method_display }}
+                                            </p>
+                                            
+                                            <h3 style="color: #000000; font-family: sans-serif; font-weight: 400; line-height: 1.4; margin: 0; margin-bottom: 15px; font-size: 16px;">Delivery Address</h3>
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">
+                                                {{ order.delivery_address.name }}<br>
+                                                {{ order.delivery_address.address_line1 }}<br>
+                                                {% if order.delivery_address.address_line2 %}
+                                                    {{ order.delivery_address.address_line2 }}<br>
+                                                {% endif %}
+                                                {{ order.delivery_address.city }}, {{ order.delivery_address.state }}<br>
+                                                {{ order.delivery_address.pincode }}<br>
+                                                Phone: {{ order.delivery_address.phone }}
+                                            </p>
+                                            
+                                            <h3 style="color: #000000; font-family: sans-serif; font-weight: 400; line-height: 1.4; margin: 0; margin-bottom: 15px; font-size: 16px;">Order Summary</h3>
+                                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: 100%; margin-bottom: 15px;">
+                                                <tr>
+                                                    <th style="text-align: left; padding: 5px 0;">Item</th>
+                                                    <th style="text-align: right; padding: 5px 0;">Price</th>
+                                                </tr>
+                                                {% for item in order.items.all %}
+                                                <tr>
+                                                    <td style="padding: 5px 0;">{{ item.product_name }} ({{ item.quantity }}x)</td>
+                                                    <td style="text-align: right; padding: 5px 0;">₹{{ item.total }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                <tr>
+                                                    <td style="padding: 5px 0; border-top: 1px solid #eee;"><strong>Subtotal</strong></td>
+                                                    <td style="text-align: right; padding: 5px 0; border-top: 1px solid #eee;">₹{{ order.subtotal }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 5px 0;">Delivery Fee</td>
+                                                    <td style="text-align: right; padding: 5px 0;">{% if order.delivery_fee %}₹{{ order.delivery_fee }}{% else %}Free{% endif %}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 5px 0; border-top: 2px solid #eee;"><strong>Total</strong></td>
+                                                    <td style="text-align: right; padding: 5px 0; border-top: 2px solid #eee;"><strong>₹{{ order.total }}</strong></td>
+                                                </tr>
+                                            </table>
+                                            
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">We'll notify you when your order is out for delivery. You can also track your order status by logging into your account.</p>
+                                            
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">If you have any questions about your order, please contact us at {{ support_email }}.</p>
+                                            
+                                            <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Thank you for shopping with {{ site_name }}!</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <!-- END MAIN CONTENT AREA -->
+                    </table>
+                    
+                    <!-- START FOOTER -->
+                    <div class="footer" style="clear: both; margin-top: 10px; text-align: center; width: 100%;">
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; width: 100%;">
+                            <tr>
+                                <td class="content-block" style="font-family: sans-serif; vertical-align: top; padding-bottom: 10px; padding-top: 10px; color: #999999; font-size: 12px; text-align: center;">
+                                    <span class="apple-link" style="color: #999999; font-size: 12px; text-align: center;">{{ site_name }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- END FOOTER -->
+                </div>
+            </td>
+            <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;">&nbsp;</td>
+        </tr>
+    </table>
+</body>
+</html>

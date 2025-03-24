@@ -1,0 +1,384 @@
+{% extends 'base.html' %} {% load static %} {% block title %}Reports & Analytics
+- FISHLAND{% endblock %} {% block extra_css %}
+<style>
+  .container-fluid {
+    padding: 2rem;
+  }
+
+  .page-section {
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    background: white;
+  }
+
+  .card-header {
+    background: white;
+    border-bottom: 1px solid #eee;
+    padding: 1rem 1.5rem;
+  }
+
+  .chart-container {
+    height: 220px !important;
+    padding: 1rem;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+    color: white;
+  }
+
+  .stat-card-sales {
+    background: linear-gradient(135deg, #4158d0, #c850c0);
+  }
+
+  .stat-card-orders {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+  }
+
+  .stat-card-products {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+  }
+
+  .stat-card-customers {
+    background: linear-gradient(135deg, #3b2667, #bc78ec);
+  }
+
+  .stat-card h3 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card p {
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  .filter-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (max-width: 992px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .btn-custom {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-custom:hover {
+    transform: translateY(-2px);
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid">
+  <!-- Header Section -->
+  <div class="page-section d-flex justify-content-between align-items-center">
+    <h1 class="h3 mb-0">Reports & Analytics</h1>
+    <div class="btn-group">
+      <button
+        class="btn btn-custom btn-primary me-2"
+        onclick="downloadReport('sales')"
+      >
+        <i class="fas fa-download me-2"></i>Sales Report
+      </button>
+      <button
+        class="btn btn-custom btn-success"
+        onclick="downloadReport('products')"
+      >
+        <i class="fas fa-download me-2"></i>Products Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-card page-section">
+    <form class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Start Date</label>
+        <input
+          type="date"
+          name="start_date"
+          class="form-control"
+          value="{{ start_date|date:'Y-m-d' }}"
+        />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">End Date</label>
+        <input
+          type="date"
+          name="end_date"
+          class="form-control"
+          value="{{ end_date|date:'Y-m-d' }}"
+        />
+      </div>
+      <div class="col-md-6">
+        <button type="submit" class="btn btn-custom btn-primary me-2">
+          Apply Filter
+        </button>
+        <div class="dropdown d-inline-block">
+          <button
+            class="btn btn-custom btn-outline-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            Quick Ranges
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="?range=today">Today</a></li>
+            <li><a class="dropdown-item" href="?range=week">This Week</a></li>
+            <li><a class="dropdown-item" href="?range=month">This Month</a></li>
+            <li><a class="dropdown-item" href="?range=year">This Year</a></li>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats-row page-section">
+    <div class="stat-card stat-card-sales">
+      <i class="fas fa-chart-line mb-3 fa-2x"></i>
+      <h3>₹{{ total_sales.total_amount|default:"0"|floatformat:2 }}</h3>
+      <p>Total Sales ({{ total_sales.total_orders|default:"0" }} orders)</p>
+    </div>
+    <div class="stat-card stat-card-orders">
+      <i class="fas fa-shopping-cart mb-3 fa-2x"></i>
+      <h3>₹{{ average_order_value|default:"0"|floatformat:2 }}</h3>
+      <p>Average Order Value</p>
+    </div>
+    <div class="stat-card stat-card-products">
+      <i class="fas fa-box mb-3 fa-2x"></i>
+      <h3>{{ total_products_sold|default:"0" }}</h3>
+      <p>Products Sold</p>
+    </div>
+    <div class="stat-card stat-card-customers">
+      <i class="fas fa-users mb-3 fa-2x"></i>
+      <h3>{{ new_buyers|default:"0" }}</h3>
+      <p>New Customers</p>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-grid">
+    <!-- Sales Trend Chart -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Sales Trend</h5>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="salesTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Category Distribution</h5>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Top Products</h5>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="topProductsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Status -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Order Status</h5>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="orderStatusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Chart color schemes
+  const chartColors = {
+      sales: {
+          primary: '#4158D0',
+          gradient: ['#4158D0', '#C850C0']
+      },
+      category: {
+          colors: ['#43E97B', '#38F9D7', '#33CCAA', '#2E9E8D', '#297F70']
+      },
+      products: {
+          colors: ['#FA709A', '#FEE140', '#FFAA85', '#FF8C71', '#FF6B5C']
+      },
+      status: {
+          colors: ['#3B2667', '#BC78EC', '#9B59B6', '#8E44AD', '#7D3C98']
+      }
+  };
+
+  // Sales Trend Chart
+  new Chart('salesTrendChart', {
+      type: 'line',
+      data: {
+          labels: {{ sales_labels|safe }},
+          datasets: [{
+              label: 'Sales',
+              data: {{ sales_data|safe }},
+              borderColor: chartColors.sales.primary,
+              backgroundColor: 'rgba(65, 88, 208, 0.1)',
+              borderWidth: 2,
+              tension: 0.4,
+              fill: true
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  display: false
+              }
+          },
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  grid: {
+                      color: 'rgba(0, 0, 0, 0.05)'
+                  }
+              },
+              x: {
+                  grid: {
+                      display: false
+                  }
+              }
+          }
+      }
+  });
+
+  // Category Distribution Chart
+  new Chart('categoryChart', {
+      type: 'doughnut',
+      data: {
+          labels: {{ category_labels|safe }},
+          datasets: [{
+              data: {{ category_data|safe }},
+              backgroundColor: chartColors.category.colors
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  position: 'right',
+                  labels: {
+                      boxWidth: 12,
+                      padding: 15
+                  }
+              }
+          }
+      }
+  });
+
+  // Top Products Chart
+  new Chart('topProductsChart', {
+      type: 'bar',
+      data: {
+          labels: {{ top_products_labels|safe }},
+          datasets: [{
+              label: 'Sales',
+              data: {{ top_products_data|safe }},
+              backgroundColor: chartColors.products.colors
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  display: false
+              }
+          },
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  grid: {
+                      color: 'rgba(0, 0, 0, 0.05)'
+                  }
+              },
+              x: {
+                  grid: {
+                      display: false
+                  }
+              }
+          }
+      }
+  });
+
+  // Order Status Chart
+  new Chart('orderStatusChart', {
+      type: 'pie',
+      data: {
+          labels: {{ order_status_labels|safe }},
+          datasets: [{
+              data: {{ order_status_data|safe }},
+              backgroundColor: chartColors.status.colors
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  position: 'right',
+                  labels: {
+                      boxWidth: 12,
+                      padding: 15
+                  }
+              }
+          }
+      }
+  });
+</script>
+{% endblock %}

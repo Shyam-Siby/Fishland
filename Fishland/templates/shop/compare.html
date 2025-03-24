@@ -1,0 +1,302 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Compare Products - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Compare Products</h1>
+        <div>
+            <button class="btn btn-outline-primary me-2" onclick="shareComparison()">
+                <i class="fas fa-share-alt me-1"></i>Share Comparison
+            </button>
+            <a href="{% url 'shop:products' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add More Products
+            </a>
+        </div>
+    </div>
+
+    {% if products %}
+    <!-- Comparison Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 200px;">Product</th>
+                            {% for product in products %}
+                            <td class="text-center" style="min-width: 250px;">
+                                <div class="position-relative mb-3">
+                                    <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0"
+                                            onclick="removeFromCompare('{{ product.id }}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                         class="img-fluid rounded" style="height: 150px; object-fit: cover;">
+                                </div>
+                                <h5 class="mb-2">
+                                    <a href="{% url 'shop:product_detail' product.id %}" 
+                                       class="text-decoration-none text-dark">
+                                        {{ product.name }}
+                                    </a>
+                                </h5>
+                                <div class="mb-2">
+                                    {% if product.discount_price %}
+                                    <span class="h5 me-2">₹{{ product.discount_price }}</span>
+                                    <span class="text-muted text-decoration-line-through">₹{{ product.price }}</span>
+                                    <span class="badge bg-danger ms-1">-{{ product.discount_percentage }}%</span>
+                                    {% else %}
+                                    <span class="h5">₹{{ product.price }}</span>
+                                    {% endif %}
+                                    <span class="text-muted">/kg</span>
+                                </div>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-primary" onclick="addToCart('{{ product.id }}')">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="addToWishlist('{{ product.id }}')">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Category -->
+                        <tr>
+                            <th>Category</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.category }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Rating -->
+                        <tr>
+                            <th>Rating</th>
+                            {% for product in products %}
+                            <td class="text-center">
+                                <div class="mb-1">
+                                    {% for i in "12345"|make_list %}
+                                    <i class="fas fa-star{% if forloop.counter <= product.average_rating %} text-warning{% else %} text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted">{{ product.total_reviews }} reviews</small>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Stock -->
+                        <tr>
+                            <th>Stock</th>
+                            {% for product in products %}
+                            <td class="text-center">
+                                <span class="{% if product.stock > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if product.stock > 0 %}
+                                    <i class="fas fa-check-circle me-1"></i>{{ product.stock }} kg in stock
+                                    {% else %}
+                                    <i class="fas fa-times-circle me-1"></i>Out of stock
+                                    {% endif %}
+                                </span>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Description -->
+                        <tr>
+                            <th>Description</th>
+                            {% for product in products %}
+                            <td>{{ product.description }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Origin -->
+                        <tr>
+                            <th>Origin</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.origin }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Freshness -->
+                        <tr>
+                            <th>Freshness</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.freshness }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Packaging -->
+                        <tr>
+                            <th>Packaging</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.packaging }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Minimum Order -->
+                        <tr>
+                            <th>Minimum Order</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.min_order }} kg</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Delivery Time -->
+                        <tr>
+                            <th>Delivery Time</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.delivery_time }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Seller -->
+                        <tr>
+                            <th>Seller</th>
+                            {% for product in products %}
+                            <td class="text-center">
+                                <div class="mb-1">{{ product.seller.company_name }}</div>
+                                <div class="mb-1">
+                                    {% for i in "12345"|make_list %}
+                                    <i class="fas fa-star{% if forloop.counter <= product.seller.rating %} text-warning{% else %} text-muted{% endif %} small"></i>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted">{{ product.seller.total_reviews }} seller reviews</small>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Return Policy -->
+                        <tr>
+                            <th>Return Policy</th>
+                            {% for product in products %}
+                            <td class="text-center">{{ product.return_policy }}</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty Comparison -->
+    <div class="text-center py-5">
+        <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+        <h4>No Products to Compare</h4>
+        <p class="text-muted mb-4">Add products to compare while shopping</p>
+        <a href="{% url 'shop:products' %}" class="btn btn-primary">
+            <i class="fas fa-shopping-cart me-1"></i>Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Comparison</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Comparison URL</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="compareUrl" readonly>
+                        <button class="btn btn-outline-primary" onclick="copyCompareUrl()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-outline-primary" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareOnFacebook()">
+                        <i class="fab fa-facebook"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareOnTwitter()">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareByEmail()">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add to Cart
+    function addToCart(productId) {
+        makeRequest('/api/cart/add/', 'POST', {
+            product_id: productId,
+            quantity: 1
+        }).then(response => {
+            showToast('Product added to cart');
+            updateCartCount();
+        });
+    }
+
+    // Add to Wishlist
+    function addToWishlist(productId) {
+        makeRequest('/api/wishlist/add/', 'POST', {
+            product_id: productId
+        }).then(response => {
+            showToast('Product added to wishlist');
+        });
+    }
+
+    // Remove from Compare
+    function removeFromCompare(productId) {
+        makeRequest(`/api/compare/remove/${productId}/`, 'DELETE')
+            .then(response => {
+                showToast('Product removed from comparison');
+                location.reload();
+            });
+    }
+
+    // Share Functions
+    function shareComparison() {
+        const compareUrl = `${window.location.href}`;
+        document.getElementById('compareUrl').value = compareUrl;
+        
+        const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+        modal.show();
+    }
+
+    function copyCompareUrl() {
+        const urlInput = document.getElementById('compareUrl');
+        urlInput.select();
+        document.execCommand('copy');
+        showToast('URL copied to clipboard');
+    }
+
+    function shareOnWhatsApp() {
+        const url = document.getElementById('compareUrl').value;
+        window.open(`https://wa.me/?text=${encodeURIComponent(url)}`);
+    }
+
+    function shareOnFacebook() {
+        const url = document.getElementById('compareUrl').value;
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+    }
+
+    function shareOnTwitter() {
+        const url = document.getElementById('compareUrl').value;
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`);
+    }
+
+    function shareByEmail() {
+        const url = document.getElementById('compareUrl').value;
+        window.location.href = `mailto:?body=${encodeURIComponent(url)}`;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'delivery/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Delivery History{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Delivery History</h5>
+                    <span class="badge bg-info">{{ completed_orders.count }} Orders</span>
+                </div>
+                <div class="card-body">
+                    {% if completed_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Delivery Address</th>
+                                    <th>Amount</th>
+                                    <th>Completed At</th>
+                                    <th>Rating</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in completed_orders %}
+                                <tr>
+                                    <td>{{ order.order_number }}</td>
+                                    <td>{{ order.user.get_full_name }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ order.delivery_address }}</small>
+                                    </td>
+                                    <td>₹{{ order.total|floatformat:2|intcomma }}</td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ order.delivery_completed_at|date:"M d, Y" }}<br>
+                                            {{ order.delivery_completed_at|time:"h:i A" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if order.delivery_rating %}
+                                        <div class="text-warning">
+                                            {{ order.delivery_rating }} ⭐
+                                        </div>
+                                        {% else %}
+                                        <span class="badge bg-secondary">No Rating</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'delivery:order_detail' order.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <img src="{% static 'images/no-data.svg' %}" alt="No Orders" class="img-fluid mb-3" style="max-width: 200px;">
+                        <h5>No Completed Deliveries</h5>
+                        <p class="text-muted">You haven't completed any deliveries yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

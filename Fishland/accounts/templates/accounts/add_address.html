@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:"Add New Address" }} - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4">{{ title|default:"Add New Address" }}</h2>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.label.id_for_label }}" class="form-label">{{ form.label.label }}</label>
+                                    {{ form.label }}
+                                    {% if form.label.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.label.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                                    {{ form.phone }}
+                                    {% if form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.phone.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.address_line1.id_for_label }}" class="form-label">{{ form.address_line1.label }}</label>
+                                    {{ form.address_line1 }}
+                                    {% if form.address_line1.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.address_line1.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.address_line2.id_for_label }}" class="form-label">{{ form.address_line2.label }}</label>
+                                    {{ form.address_line2 }}
+                                    {% if form.address_line2.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.address_line2.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.city.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.state.id_for_label }}" class="form-label">{{ form.state.label }}</label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.state.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.pincode.id_for_label }}" class="form-label">{{ form.pincode.label }}</label>
+                                    {{ form.pincode }}
+                                    {% if form.pincode.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.pincode.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if not form.instance.is_default %}
+                            <div class="col-12">
+                                <div class="form-check">
+                                    {{ form.is_default }}
+                                    <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                        Set as default address
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {{ button_text|default:"Add Address" }}
+                            </button>
+                            <a href="{% url 'accounts:address_list' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+}
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

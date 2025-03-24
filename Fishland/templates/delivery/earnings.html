@@ -1,0 +1,102 @@
+{% extends 'delivery/base.html' %}
+{% load static %}
+
+{% block title %}Earnings - FISHLAND Delivery{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Earnings Summary Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Today's Earnings -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-calendar-day text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Today's Earnings</h6>
+                            <h2 class="card-title mb-0">₹{{ earnings_today }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Earnings -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-calendar-week text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">This Week's Earnings</h6>
+                            <h2 class="card-title mb-0">₹{{ earnings_week }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Earnings -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-calendar-month text-info fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">This Month's Earnings</h6>
+                            <h2 class="card-title mb-0">₹{{ earnings_month }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Earnings History -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Recent Earnings History</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_earnings %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Delivery Location</th>
+                            <th>Amount</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_earnings %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.user.get_full_name }}</td>
+                            <td>{{ order.address.city }}</td>
+                            <td>₹{{ order.total }}</td>
+                            <td>{{ order.delivery_completed_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <h4>No Earnings History</h4>
+                <p class="text-muted">You haven't completed any deliveries yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

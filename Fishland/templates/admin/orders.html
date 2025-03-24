@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Management - FISHLAND{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-light: #FFE0E0;
+        --secondary-light: #E8F5E9;
+        --accent-light: #E3F2FD;
+        --success-light: #F1F8E9;
+        --warning-light: #FFF3E0;
+        --font-heading: 'Playfair Display', serif;
+        --font-body: 'Poppins', sans-serif;
+    }
+
+    body {
+        font-family: var(--font-body);
+        background-color: #f8f9fa;
+    }
+
+    .page-title {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: #1a237e;
+        margin: 2rem 0;
+        text-align: center;
+        background: linear-gradient(45deg, #1a237e, #3949ab);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .orders-container {
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+
+    .filter-card .form-label {
+        font-weight: 500;
+        color: #1a237e;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-card .form-control:focus,
+    .filter-card .form-select:focus {
+        border-color: #1a237e;
+        box-shadow: 0 0 0 0.2rem rgba(26, 35, 126, 0.1);
+    }
+
+    .btn-filter {
+        background: linear-gradient(45deg, #1a237e, #3949ab);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn-reset {
+        background: #f5f5f5;
+        color: #666;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-reset:hover {
+        background: #e0e0e0;
+    }
+
+    .orders-table-card {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table thead th {
+        background: #f8f9fa;
+        color: #1a237e;
+        font-weight: 600;
+        border-bottom: 2px solid #e0e0e0;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: var(--primary-light);
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .badge.bg-pending {
+        background-color: var(--warning-light) !important;
+        color: #f57c00;
+    }
+
+    .badge.bg-processing {
+        background-color: var(--accent-light) !important;
+        color: #1976d2;
+    }
+
+    .badge.bg-shipped {
+        background-color: var(--secondary-light) !important;
+        color: #388e3c;
+    }
+
+    .badge.bg-delivered {
+        background-color: var(--success-light) !important;
+        color: #2e7d32;
+    }
+
+    .badge.bg-cancelled {
+        background-color: var(--primary-light) !important;
+        color: #d32f2f;
+    }
+
+    .action-btn {
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: none;
+        background: white;
+        color: #1a237e;
+        margin: 0 0.25rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .action-btn i {
+        font-size: 1rem;
+    }
+
+    .pagination {
+        margin-top: 2rem;
+    }
+
+    .page-link {
+        color: #1a237e;
+        border: none;
+        padding: 0.75rem 1rem;
+        margin: 0 0.25rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+        background-color: var(--primary-light);
+        color: #1a237e;
+        transform: translateY(-2px);
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(45deg, #1a237e, #3949ab);
+        border: none;
+    }
+
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+    }
+
+    .modal-header {
+        background: linear-gradient(45deg, #1a237e, #3949ab);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-footer {
+        border-top: none;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-container">
+    <h1 class="page-title">Order Management</h1>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="PROCESSING" {% if request.GET.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                    <option value="SHIPPED" {% if request.GET.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                    <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                    <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Order ID or Buyer Email" 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-filter">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+                <button type="reset" class="btn btn-reset ms-2">
+                    <i class="fas fa-undo me-2"></i>Reset
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="orders-table-card">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Buyer</th>
+                        <th>Total Amount</th>
+                        <th>Items</th>
+                        <th>Status</th>
+                        <th>Payment Status</th>
+                        <th>Order Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.order_number }}</td>
+                        <td>
+                            {{ order.user.email }}
+                            <br>
+                            <small class="text-muted">{{ order.user.company_name }}</small>
+                        </td>
+                        <td>₹{{ order.total }}</td>
+                        <td>{{ order.order_items.count }} items</td>
+                        <td>
+                            <span class="badge bg-{{ order.status|lower }}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {% if order.payment_status == 'PAID' %}bg-delivered
+                                            {% elif order.payment_status == 'PENDING' %}bg-pending
+                                            {% else %}bg-cancelled{% endif %}">
+                                {{ order.payment_status }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <button type="button" class="action-btn" onclick="viewOrder('{{ order.id }}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button type="button" class="action-btn" onclick="updateStatus('{{ order.id }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if orders.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in orders.paginator.page_range %}
+                    {% if orders.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if orders.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ orders.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- View Order Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-primary fw-bold mb-3">Order Information</h6>
+                        <p class="mb-2"><strong>Order ID:</strong> <span id="orderID"></span></p>
+                        <p class="mb-2"><strong>Order Date:</strong> <span id="orderDate"></span></p>
+                        <p class="mb-2"><strong>Status:</strong> <span id="orderStatus"></span></p>
+                        <p class="mb-2"><strong>Payment Status:</strong> <span id="paymentStatus"></span></p>
+                        <p class="mb-0"><strong>Total Amount:</strong> ₹<span id="orderAmount"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary fw-bold mb-3">Buyer Information</h6>
+                        <p class="mb-2"><strong>Name:</strong> <span id="buyerName"></span></p>
+                        <p class="mb-2"><strong>Email:</strong> <span id="buyerEmail"></span></p>
+                        <p class="mb-2"><strong>Company:</strong> <span id="buyerCompany"></span></p>
+                        <p class="mb-2"><strong>Phone:</strong> <span id="buyerPhone"></span></p>
+                        <p class="mb-0"><strong>GST Number:</strong> <span id="buyerGST"></span></p>
+                    </div>
+                </div>
+                <h6 class="text-primary fw-bold mb-3">Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table" id="orderItemsTable">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Order Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="updateStatusForm" onsubmit="return submitStatusUpdate()">
+                <div class="modal-body">
+                    <input type="hidden" name="order_id" id="updateOrderId">
+                    <div class="mb-3">
+                        <label class="form-label">New Status</label>
+                        <select name="status" class="form-select" required>
+                            <option value="PENDING">Pending</option>
+                            <option value="PROCESSING">Processing</option>
+                            <option value="SHIPPED">Shipped</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    <div id="shipmentFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Tracking Number</label>
+                            <input type="text" name="tracking_number" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Courier Service</label>
+                            <input type="text" name="courier_service" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-reset" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-filter">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentOrderId = null;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function viewOrder(orderId) {
+        currentOrderId = orderId;
+        const csrftoken = getCookie('csrftoken');
+        
+        // Fetch order details and populate modal
+        fetch(`/admin_dashboard/orders/${orderId}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(order => {
+                // Populate order information
+                document.getElementById('orderID').textContent = order.order_number;
+                document.getElementById('orderDate').textContent = formatDate(order.created_at);
+                document.getElementById('orderStatus').textContent = order.status;
+                document.getElementById('paymentStatus').textContent = order.payment_status;
+                document.getElementById('orderAmount').textContent = `₹${order.total}`;
+
+                // Populate buyer information
+                document.getElementById('buyerName').textContent = `${order.user.first_name} ${order.user.last_name}`;
+                document.getElementById('buyerEmail').textContent = order.user.email;
+                document.getElementById('buyerCompany').textContent = order.user.company_name || 'N/A';
+                document.getElementById('buyerPhone').textContent = order.user.phone || 'N/A';
+                document.getElementById('buyerGST').textContent = order.user.gst_number || 'N/A';
+
+                // Populate order items
+                const tbody = document.querySelector('#orderItemsTable tbody');
+                tbody.innerHTML = '';
+                order.order_items.forEach(item => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${item.product.name}</td>
+                        <td>${item.quantity} kg</td>
+                        <td>₹${item.price_per_kg}</td>
+                        <td>₹${item.total_price}</td>
+                    `;
+                });
+
+                // Populate shipment information if available
+                const shipmentInfo = document.getElementById('shipmentInfo');
+                if (order.shipment) {
+                    shipmentInfo.style.display = 'block';
+                    document.getElementById('trackingNumber').textContent = order.shipment.tracking_number;
+                    document.getElementById('carrier').textContent = order.shipment.carrier;
+                    document.getElementById('estimatedDelivery').textContent = formatDate(order.shipment.estimated_delivery);
+                    document.getElementById('shipmentStatus').textContent = order.shipment.status;
+                } else {
+                    shipmentInfo.style.display = 'none';
+                }
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching order details:', error);
+                alert('Failed to load order details. Please try again.');
+            });
+    }
+
+    function updateStatus(orderId) {
+        currentOrderId = orderId;
+        // Fetch current order status and populate form
+        fetch(`/admin/orders/${orderId}/`)
+            .then(response => response.json())
+            .then(order => {
+                const form = document.getElementById('updateStatusForm');
+                form.status.value = order.status;
+
+                // Show/hide shipment fields based on status
+                const shipmentFields = document.getElementById('shipmentFields');
+                shipmentFields.style.display = order.status === 'SHIPPED' ? 'block' : 'none';
+
+                if (order.shipment) {
+                    form.tracking_number.value = order.shipment.tracking_number;
+                    form.carrier.value = order.shipment.carrier;
+                    form.estimated_delivery.value = order.shipment.estimated_delivery;
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+                modal.show();
+            });
+    }
+
+    // Show/hide shipment fields based on selected status
+    document.querySelector('#updateStatusForm select[name="status"]').addEventListener('change', function() {
+        const shipmentFields = document.getElementById('shipmentFields');
+        shipmentFields.style.display = this.value === 'SHIPPED' ? 'block' : 'none';
+    });
+
+    function submitStatusUpdate() {
+        const form = document.getElementById('updateStatusForm');
+        const formData = new FormData(form);
+        const data = {
+            status: formData.get('status')
+        };
+
+        if (formData.get('status') === 'SHIPPED') {
+            data.shipment = {
+                tracking_number: formData.get('tracking_number'),
+                carrier: formData.get('courier_service'),
+                estimated_delivery: formData.get('estimated_delivery')
+            };
+        }
+
+        fetch(`/admin/orders/${currentOrderId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(response => {
+                showToast('Order status updated successfully');
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error updating order status:', error);
+                alert('Failed to update order status. Please try again.');
+            });
+    }
+</script>
+{% endblock %}

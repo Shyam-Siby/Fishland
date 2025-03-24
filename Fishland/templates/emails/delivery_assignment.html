@@ -1,0 +1,56 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #2c3e50; margin-bottom: 20px;">New Delivery Assignment</h2>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">Order Details</h3>
+        <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+        <p><strong>Delivery Date:</strong> {{ order.delivery_date }}</p>
+        <p><strong>Delivery Time:</strong> {{ order.delivery_time }}</p>
+    </div>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">Delivery Address</h3>
+        <p><strong>Name:</strong> {{ order.delivery_address.name }}</p>
+        <p><strong>Phone:</strong> {{ order.delivery_address.phone }}</p>
+        <p><strong>Address:</strong><br>
+            {{ order.delivery_address.address_line1 }}<br>
+            {% if order.delivery_address.address_line2 %}
+                {{ order.delivery_address.address_line2 }}<br>
+            {% endif %}
+            {{ order.delivery_address.city }}, {{ order.delivery_address.state }}<br>
+            PIN: {{ order.delivery_address.pincode }}
+        </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+        <h3 style="color: #2c3e50; margin-top: 0;">Order Items</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #e9ecef;">
+                    <th style="padding: 8px; text-align: left;">Item</th>
+                    <th style="padding: 8px; text-align: right;">Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td style="padding: 8px; border-top: 1px solid #dee2e6;">{{ item.product.name }}</td>
+                    <td style="padding: 8px; border-top: 1px solid #dee2e6; text-align: right;">{{ item.quantity }}kg</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{{ site_url }}{% url 'delivery:order_detail' order.id %}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Order Details</a>
+    </div>
+
+    <p style="margin-top: 20px; color: #6c757d;">
+        Please log in to your delivery dashboard to manage this delivery. If you have any questions, please contact support.
+    </p>
+</div>
+{% endblock %}

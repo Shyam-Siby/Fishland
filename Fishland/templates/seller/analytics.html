@@ -1,0 +1,242 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Analytics</h1>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" onclick="downloadReport('sales')">
+                <i class="fas fa-download me-1"></i>Sales Report
+            </button>
+            <button class="btn btn-outline-primary" onclick="downloadReport('products')">
+                <i class="fas fa-download me-1"></i>Products Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="dateRangeForm" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date Range</label>
+                    <select class="form-select" id="dateRangeSelect" name="range">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-3" id="startDateContainer" style="display: none;">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3" id="endDateContainer" style="display: none;">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Sales</h6>
+                    <h2 class="mb-0">₹{{ sales_stats.total_amount|default:0 }}</h2>
+                    <small>{{ sales_stats.total_orders|default:0 }} orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Quantity Sold</h6>
+                    <h2 class="mb-0">{{ sales_stats.total_quantity|default:0 }} kg</h2>
+                    <small>Across all products</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Average Order Value</h6>
+                    <h2 class="mb-0">₹{{ sales_stats.avg_order_value|default:0|floatformat:2 }}</h2>
+                    <small>Per order</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Unique Buyers</h6>
+                    <h2 class="mb-0">{{ sales_stats.unique_buyers|default:0 }}</h2>
+                    <small>In selected period</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sales Trend Chart -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Sales Trend</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary active" onclick="updateChart('daily')">Daily</button>
+                            <button class="btn btn-outline-secondary" onclick="updateChart('weekly')">Weekly</button>
+                            <button class="btn btn-outline-secondary" onclick="updateChart('monthly')">Monthly</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Products</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Sales</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td>₹{{ product.total_sales|default:0 }}</td>
+                                    <td>{{ product.total_quantity|default:0 }} kg</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue by Category -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Revenue by Category</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Total Sales</th>
+                            <th>Total Quantity</th>
+                            <th>Products</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in revenue_by_category %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>₹{{ category.total_sales|default:0 }}</td>
+                            <td>{{ category.total_quantity|default:0 }} kg</td>
+                            <td>{{ category.product_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize sales chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.dates|safe }},
+            datasets: [{
+                label: 'Sales Amount',
+                data: {{ chart_data.amounts|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Handle date range selection
+    document.getElementById('dateRangeSelect').addEventListener('change', function() {
+        const startDateContainer = document.getElementById('startDateContainer');
+        const endDateContainer = document.getElementById('endDateContainer');
+        
+        if (this.value === 'custom') {
+            startDateContainer.style.display = 'block';
+            endDateContainer.style.display = 'block';
+        } else {
+            startDateContainer.style.display = 'none';
+            endDateContainer.style.display = 'none';
+        }
+    });
+
+    // Handle chart period updates
+    function updateChart(period) {
+        // Update active button
+        const buttons = document.querySelectorAll('.btn-group button');
+        buttons.forEach(button => button.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Update chart data based on period
+        // This is just a placeholder - you'll need to implement the actual data update
+    }
+
+    // Handle report downloads
+    function downloadReport(type) {
+        const params = new URLSearchParams(window.location.search);
+        const range = params.get('range') || '30';
+        const startDate = params.get('start_date') || '';
+        const endDate = params.get('end_date') || '';
+        
+        window.location.href = `/seller/reports/${type}/?range=${range}&start_date=${startDate}&end_date=${endDate}`;
+    }
+</script>
+{% endblock %}

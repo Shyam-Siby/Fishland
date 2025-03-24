@@ -1,0 +1,96 @@
+/* General Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navigation */
+.navbar-brand i {
+    color: #fff;
+}
+
+/* Cards */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Statistics Cards */
+.stat-card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card h2 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-card small {
+    opacity: 0.8;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 500;
+}
+
+/* Buttons */
+.btn-group {
+    gap: 0.25rem;
+}
+
+/* Modals */
+.modal-header {
+    background-color: #f8f9fa;
+}
+
+/* Custom Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Charts */
+canvas {
+    max-width: 100%;
+}

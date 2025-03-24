@@ -1,0 +1,400 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}My Wishlist - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Wishlist</h1>
+        <div>
+            <button class="btn btn-outline-primary me-2" onclick="shareWishlist()">
+                <i class="fas fa-share-alt me-1"></i>Share Wishlist
+            </button>
+            <a href="{% url 'shop:products' %}" class="btn btn-primary">
+                <i class="fas fa-shopping-cart me-1"></i>Continue Shopping
+            </a>
+        </div>
+    </div>
+
+    <!-- Wishlist Content -->
+    {% if wishlist_items %}
+    <div class="row">
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <div class="row g-4">
+                {% for item in wishlist_items %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <!-- Product Image -->
+                        <div class="position-relative">
+                            <img src="{{ item.product.image.url }}" class="card-img-top" 
+                                 alt="{{ item.product.name }}"
+                                 style="height: 200px; object-fit: cover;">
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                                    onclick="removeFromWishlist('{{ item.product.id }}')">
+                                <i class="fas fa-heart-broken"></i>
+                            </button>
+                            {% if item.product.discount_percentage > 0 %}
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-danger">
+                                    -{{ item.product.discount_percentage }}%
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Details -->
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">
+                                <a href="{% url 'shop:product_detail' item.product.id %}" 
+                                   class="text-decoration-none text-dark">
+                                    {{ item.product.name }}
+                                </a>
+                            </h5>
+                            <div class="mb-2">
+                                <span class="text-muted">{{ item.product.category }}</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                {% for i in "12345"|make_list %}
+                                <i class="fas fa-star{% if forloop.counter <= item.product.average_rating %} text-warning{% else %} text-muted{% endif %} small"></i>
+                                {% endfor %}
+                                <span class="ms-1 small text-muted">({{ item.product.total_reviews }})</span>
+                            </div>
+                            <div class="mb-3">
+                                {% if item.product.discount_price %}
+                                <span class="h5 me-2">₹{{ item.product.discount_price }}</span>
+                                <span class="text-muted text-decoration-line-through">₹{{ item.product.price }}</span>
+                                {% else %}
+                                <span class="h5">₹{{ item.product.price }}</span>
+                                {% endif %}
+                                <span class="text-muted">/kg</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    {{ item.product.stock }} kg in stock
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-primary" 
+                                            onclick="addToCart('{{ item.product.id }}')">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="addToCompare('{{ item.product.id }}')">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Alert -->
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check form-switch flex-grow-1">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="priceAlert{{ item.product.id }}"
+                                           {% if item.price_alert %}checked{% endif %}
+                                           onchange="togglePriceAlert('{{ item.product.id }}')">
+                                    <label class="form-check-label" for="priceAlert{{ item.product.id }}">
+                                        Price Alert
+                                    </label>
+                                </div>
+                                {% if item.price_alert %}
+                                <small class="text-muted">
+                                    Alert at ₹{{ item.alert_price }}
+                                </small>
+                                <button class="btn btn-sm btn-link p-0 ms-2" 
+                                        onclick="editPriceAlert('{{ item.product.id }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if wishlist_items.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if wishlist_items.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ wishlist_items.previous_page_number }}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in wishlist_items.paginator.page_range %}
+                    <li class="page-item {% if wishlist_items.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if wishlist_items.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ wishlist_items.next_page_number }}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- Wishlist Summary -->
+        <div class="col-lg-3">
+            <div class="card sticky-top" style="top: 1rem;">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Wishlist Summary</h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Items</span>
+                            <span>{{ total_items }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Value</span>
+                            <span>₹{{ total_value }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items in Stock</span>
+                            <span>{{ in_stock_items }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Price Alerts</span>
+                            <span>{{ price_alerts }}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 mb-2" onclick="addAllToCart()">
+                        <i class="fas fa-cart-plus me-1"></i>Add All to Cart
+                    </button>
+                    <button class="btn btn-outline-danger w-100" onclick="clearWishlist()">
+                        <i class="fas fa-trash me-1"></i>Clear Wishlist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty Wishlist -->
+    <div class="text-center py-5">
+        <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+        <h4>Your Wishlist is Empty</h4>
+        <p class="text-muted mb-4">Add items to your wishlist while shopping</p>
+        <a href="{% url 'shop:products' %}" class="btn btn-primary">
+            <i class="fas fa-shopping-cart me-1"></i>Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Price Alert Modal -->
+<div class="modal fade" id="priceAlertModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set Price Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="priceAlertForm">
+                    <input type="hidden" name="product_id" id="alertProductId">
+                    <div class="mb-3">
+                        <label class="form-label">Current Price</label>
+                        <input type="text" class="form-control" id="currentPrice" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alert Price</label>
+                        <input type="number" class="form-control" name="alert_price" 
+                               id="alertPrice" required step="0.01">
+                        <div class="form-text">
+                            You'll be notified when the price drops below this amount
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="savePriceAlert()">
+                    Save Alert
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Wishlist Modal -->
+<div class="modal fade" id="shareWishlistModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Wishlist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Wishlist URL</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="wishlistUrl" readonly>
+                        <button class="btn btn-outline-primary" onclick="copyWishlistUrl()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-outline-primary" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareOnFacebook()">
+                        <i class="fab fa-facebook"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareOnTwitter()">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="shareByEmail()">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add to Cart
+    function addToCart(productId) {
+        makeRequest('/api/cart/add/', 'POST', {
+            product_id: productId,
+            quantity: 1
+        }).then(response => {
+            showToast('Product added to cart');
+            updateCartCount();
+        });
+    }
+
+    // Add All to Cart
+    function addAllToCart() {
+        makeRequest('/api/cart/add-all-wishlist/', 'POST')
+            .then(response => {
+                showToast('All available items added to cart');
+                updateCartCount();
+            });
+    }
+
+    // Remove from Wishlist
+    function removeFromWishlist(productId) {
+        makeRequest(`/api/wishlist/remove/${productId}/`, 'DELETE')
+            .then(response => {
+                showToast('Product removed from wishlist');
+                location.reload();
+            });
+    }
+
+    // Clear Wishlist
+    function clearWishlist() {
+        if (confirm('Are you sure you want to clear your wishlist?')) {
+            makeRequest('/api/wishlist/clear/', 'DELETE')
+                .then(response => {
+                    showToast('Wishlist cleared');
+                    location.reload();
+                });
+        }
+    }
+
+    // Add to Compare
+    function addToCompare(productId) {
+        makeRequest('/api/compare/add/', 'POST', {
+            product_id: productId
+        }).then(response => {
+            showToast('Product added to comparison');
+            window.location.href = '{% url "shop:compare" %}';
+        });
+    }
+
+    // Price Alert Functions
+    function togglePriceAlert(productId) {
+        const checkbox = document.getElementById(`priceAlert${productId}`);
+        if (checkbox.checked) {
+            editPriceAlert(productId);
+        } else {
+            removePriceAlert(productId);
+        }
+    }
+
+    function editPriceAlert(productId) {
+        makeRequest(`/api/products/${productId}/`)
+            .then(product => {
+                document.getElementById('alertProductId').value = productId;
+                document.getElementById('currentPrice').value = product.price;
+                document.getElementById('alertPrice').value = product.price;
+                
+                const modal = new bootstrap.Modal(document.getElementById('priceAlertModal'));
+                modal.show();
+            });
+    }
+
+    function savePriceAlert() {
+        const form = document.getElementById('priceAlertForm');
+        const formData = new FormData(form);
+        
+        makeRequest('/api/wishlist/price-alert/', 'POST', {
+            product_id: formData.get('product_id'),
+            alert_price: formData.get('alert_price')
+        }).then(response => {
+            showToast('Price alert saved');
+            location.reload();
+        });
+    }
+
+    function removePriceAlert(productId) {
+        makeRequest(`/api/wishlist/price-alert/${productId}/`, 'DELETE')
+            .then(response => {
+                showToast('Price alert removed');
+                location.reload();
+            });
+    }
+
+    // Share Wishlist Functions
+    function shareWishlist() {
+        const wishlistUrl = `${window.location.origin}/wishlist/share/${wishlistId}/`;
+        document.getElementById('wishlistUrl').value = wishlistUrl;
+        
+        const modal = new bootstrap.Modal(document.getElementById('shareWishlistModal'));
+        modal.show();
+    }
+
+    function copyWishlistUrl() {
+        const urlInput = document.getElementById('wishlistUrl');
+        urlInput.select();
+        document.execCommand('copy');
+        showToast('URL copied to clipboard');
+    }
+
+    function shareOnWhatsApp() {
+        const url = document.getElementById('wishlistUrl').value;
+        window.open(`https://wa.me/?text=${encodeURIComponent(url)}`);
+    }
+
+    function shareOnFacebook() {
+        const url = document.getElementById('wishlistUrl').value;
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+    }
+
+    function shareOnTwitter() {
+        const url = document.getElementById('wishlistUrl').value;
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`);
+    }
+
+    function shareByEmail() {
+        const url = document.getElementById('wishlistUrl').value;
+        window.location.href = `mailto:?body=${encodeURIComponent(url)}`;
+    }
+</script>
+{% endblock %}

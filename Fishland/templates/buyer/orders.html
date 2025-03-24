@@ -1,0 +1,257 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}My Orders - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="Profile" 
+                                 class="rounded-circle profile-image">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-0">{{ user.get_full_name }}</h5>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="nav flex-column nav-pills">
+                        <a class="nav-link" href="{% url 'buyer:dashboard' %}">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                        <a class="nav-link active" href="{% url 'buyer:order_list' %}">
+                            <i class="fas fa-shopping-bag me-2"></i> My Orders
+                        </a>
+                        <a class="nav-link" href="{% url 'buyer:addresses' %}">
+                            <i class="fas fa-map-marker-alt me-2"></i> Addresses
+                        </a>
+                        <a class="nav-link" href="{% url 'account_email' %}">
+                            <i class="fas fa-envelope me-2"></i> Email Settings
+                        </a>
+                        <a class="nav-link" href="{% url 'account_change_password' %}">
+                            <i class="fas fa-lock me-2"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">My Orders</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter -->
+                    <form method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Search orders..." value="{{ current_search }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="status" class="form-select" onchange="this.form.submit()">
+                                    <option value="">All Status</option>
+                                    {% for status_code, status_label in status_choices %}
+                                    <option value="{{ status_code }}" 
+                                            {% if status_code == current_status %}selected{% endif %}>
+                                        {{ status_label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="sort" class="form-select" onchange="this.form.submit()">
+                                    <option value="-created_at" 
+                                            {% if current_sort == '-created_at' %}selected{% endif %}>
+                                        Newest First
+                                    </option>
+                                    <option value="created_at" 
+                                            {% if current_sort == 'created_at' %}selected{% endif %}>
+                                        Oldest First
+                                    </option>
+                                    <option value="-total_amount" 
+                                            {% if current_sort == '-total_amount' %}selected{% endif %}>
+                                        Amount: High to Low
+                                    </option>
+                                    <option value="total_amount" 
+                                            {% if current_sort == 'total_amount' %}selected{% endif %}>
+                                        Amount: Low to High
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Orders List -->
+                    {% if orders %}
+                        {% for order in orders %}
+                        <div class="card mb-3 order-card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <h6 class="mb-1">Order #{{ order.order_number }}</h6>
+                                        <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-{{ order.status|lower }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6 class="mb-0">₹{{ order.total_amount }}</h6>
+                                        <small class="text-muted">{{ order.items.count }} items</small>
+                                    </div>
+                                    <div class="col-md-3 text-md-end">
+                                        <a href="{% url 'buyer:order_detail' order.order_number %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                        {% if order.status == 'PENDING' or order.status == 'CONFIRMED' %}
+                                        <a href="{% url 'buyer:cancel_order' order.order_number %}" 
+                                           class="btn btn-sm btn-danger ms-2">
+                                            Cancel
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Pagination -->
+                        {% if orders.paginator.num_pages > 1 %}
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if orders.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ orders.previous_page_number }}
+                                            &status={{ current_status }}&search={{ current_search }}
+                                            &sort={{ current_sort }}">
+                                        Previous
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in orders.paginator.page_range %}
+                                    {% if orders.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}
+                                                &status={{ current_status }}&search={{ current_search }}
+                                                &sort={{ current_sort }}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if orders.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ orders.next_page_number }}
+                                            &status={{ current_status }}&search={{ current_search }}
+                                            &sort={{ current_sort }}">
+                                        Next
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <h5>No orders found</h5>
+                            <p class="text-muted">
+                                {% if current_search or current_status %}
+                                    Try changing your search or filter criteria
+                                {% else %}
+                                    You haven't placed any orders yet
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep Order</button>
+                <button type="button" class="btn btn-danger" id="confirmCancel">Yes, Cancel Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let orderToCancel = null;
+const cancelModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+
+function cancelOrder(orderId) {
+    orderToCancel = orderId;
+    cancelModal.show();
+}
+
+document.getElementById('confirmCancel').addEventListener('click', function() {
+    if (!orderToCancel) return;
+    
+    fetch(`/buyer/orders/${orderToCancel}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to cancel order');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while cancelling the order');
+    })
+    .finally(() => {
+        cancelModal.hide();
+        orderToCancel = null;
+    });
+});
+</script>
+{% endblock %}

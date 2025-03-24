@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - FISHLAND{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Product Gallery */
+    .product-gallery {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        background: white;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .product-gallery img {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    /* Product Info */
+    .product-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    
+    .category-badge {
+        background: #e3f2fd;
+        color: #0277bd;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .price-tag {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0277bd;
+        margin: 1rem 0;
+    }
+    
+    .stock-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+    }
+    
+    .stock-info p {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+    
+    /* Quantity Input */
+    .quantity-input {
+        background: #f8f9fa;
+        border: 2px solid #e3f2fd;
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .quantity-input:focus {
+        border-color: #0277bd;
+        box-shadow: none;
+    }
+    
+    /* Add to Cart Button */
+    .add-to-cart-btn {
+        background: #0277bd;
+        border: none;
+        border-radius: 12px;
+        padding: 1rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .add-to-cart-btn:hover {
+        background: #01579b;
+        transform: translateY(-2px);
+    }
+    
+    /* Info Cards */
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .info-card .card-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Reviews Section */
+    .review-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .star-rating {
+        font-size: 1.25rem;
+        color: #ffc107;
+    }
+    
+    .review-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .stat-box {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .stat-box h4 {
+        color: #0277bd;
+        margin: 0;
+    }
+    
+    .verified-badge {
+        background: #4caf50;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    /* Breadcrumb */
+    .custom-breadcrumb {
+        background: transparent;
+        padding: 1rem 0;
+    }
+    
+    .custom-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        color: #0277bd;
+    }
+    
+    .custom-breadcrumb a {
+        color: #0277bd;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .custom-breadcrumb a:hover {
+        color: #01579b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="custom-breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Product Image -->
+        <div class="col-lg-6">
+            <div class="product-gallery">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid">
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-6">
+            <span class="category-badge">
+                <i class="fas fa-tag me-2"></i>{{ product.category.name }}
+            </span>
+            <h1 class="product-title">{{ product.name }}</h1>
+            
+            <!-- Rating Summary -->
+            {% if avg_rating %}
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="star-rating">
+                    {% for i in "12345"|make_list %}
+                    <i class="fas fa-star {% if forloop.counter <= avg_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <span class="text-dark fw-500">{{ avg_rating|floatformat:1 }}</span>
+                <span class="text-muted">({{ review_count }} reviews)</span>
+            </div>
+            {% endif %}
+
+            <div class="price-tag">₹{{ product.price_per_kg }}/kg</div>
+            
+            <div class="stock-info">
+                <p><i class="fas fa-box me-2"></i><strong>Minimum Order:</strong> {{ product.minimum_order_quantity }}kg</p>
+                <p><i class="fas fa-warehouse me-2"></i><strong>Available Stock:</strong> {{ product.stock_quantity }}kg</p>
+            </div>
+
+            {% if user.is_authenticated %}
+                {% if product.is_available and product.stock_quantity > 0 %}
+                <form id="add-to-cart-form" class="mt-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label fw-bold">Quantity (kg)</label>
+                        <input type="number" class="form-control quantity-input" id="quantity" name="quantity" 
+                               min="{{ product.minimum_order_quantity }}" 
+                               max="{{ product.stock_quantity }}" 
+                               step="0.5"
+                               value="{{ product.minimum_order_quantity }}" 
+                               required>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Minimum: {{ product.minimum_order_quantity }}kg | Available: {{ product.stock_quantity }}kg
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-primary add-to-cart-btn w-100" id="add-to-cart-btn">
+                        <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                    </button>
+                </form>
+                <div id="cart-message" class="alert mt-3" style="display: none;"></div>
+                {% else %}
+                <div class="alert alert-warning mt-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% if not product.is_available %}
+                    This product is currently unavailable.
+                    {% else %}
+                    Out of stock.
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Please <a href="{% url 'account_login' %}" class="alert-link">login</a> to add items to your cart.
+                </div>
+            {% endif %}
+
+            <!-- Seller Info -->
+            <div class="info-card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-store me-2"></i>Seller Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Seller:</strong><br>
+                                {{ product.seller.company_name }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Location:</strong><br>
+                                {{ product.seller.seller_profile.location }}
+                            </p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-0">
+                                <strong>Member Since:</strong><br>
+                                {{ product.seller.date_joined|date:"F Y" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="info-card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Product Description</h5>
+                    <p class="card-text">{{ product.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="info-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0"><i class="fas fa-star me-2"></i>Customer Reviews</h5>
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                            <i class="fas fa-pencil-alt me-2"></i>Write a Review
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% if avg_rating %}
+                    <div class="review-stats">
+                        <div class="stat-box">
+                            <div class="star-rating mb-2">
+                                {% for i in "12345"|make_list %}
+                                <i class="fas fa-star {% if forloop.counter <= avg_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                            <h4>{{ avg_rating|floatformat:1 }}</h4>
+                            <small class="text-muted">Average Rating</small>
+                        </div>
+                        <div class="stat-box">
+                            <i class="fas fa-comments fa-2x mb-2 text-primary"></i>
+                            <h4>{{ review_count }}</h4>
+                            <small class="text-muted">Total Reviews</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if reviews %}
+                    <div class="reviews-list">
+                        {% for review in reviews %}
+                        <div class="review-card">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <div class="star-rating mb-2">
+                                        {% for i in "12345"|make_list %}
+                                        <i class="fas fa-star {% if forloop.counter <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                    <h6 class="mb-1">{{ review.user.get_full_name|default:review.user.email }}</h6>
+                                    <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
+                                </div>
+                                <span class="verified-badge">
+                                    <i class="fas fa-check-circle"></i>
+                                    Verified Purchase
+                                </span>
+                            </div>
+                            <p class="mb-0">{{ review.comment }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Reviews Yet</h5>
+                        <p class="mb-0">Be the first to review this product</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add-to-cart-form');
+        const message = document.getElementById('cart-message');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const quantity = document.getElementById('quantity').value;
+                const formData = new FormData();
+                formData.append('quantity', quantity);
+                
+                fetch(`/cart/add/{{ product.id }}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    message.style.display = 'block';
+                    if (data.success) {
+                        message.className = 'alert alert-success mt-3';
+                        message.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + data.message;
+                        // Update cart count in navbar if exists
+                        const cartCount = document.getElementById('cart-count');
+                        if (cartCount) {
+                            cartCount.textContent = data.cart_count;
+                        }
+                    } else {
+                        message.className = 'alert alert-danger mt-3';
+                        message.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + data.message;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    message.style.display = 'block';
+                    message.className = 'alert alert-danger mt-3';
+                    message.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>An error occurred. Please try again.';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

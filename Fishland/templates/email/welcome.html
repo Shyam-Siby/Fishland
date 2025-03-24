@@ -1,0 +1,38 @@
+{% extends "email/base_email.html" %}
+
+{% block content %}
+<h2>Welcome to FISHLAND!</h2>
+
+<p>Dear {{ user.get_full_name }},</p>
+
+<p>Thank you for joining FISHLAND! We're excited to have you as part of our community.</p>
+
+<div class="info">
+    <h3>What's Next?</h3>
+    <ul>
+        <li>Browse our wide selection of fresh seafood</li>
+        <li>Check out our daily deals and special offers</li>
+        <li>Complete your profile to get personalized recommendations</li>
+        <li>Save your delivery addresses for faster checkout</li>
+    </ul>
+</div>
+
+<p>Start exploring our products by clicking the button below:</p>
+
+<a href="https://your-domain.com/products/" class="button">Browse Products</a>
+
+<div class="info">
+    <h3>Need Help?</h3>
+    <p>If you have any questions or need assistance, our customer support team is here to help. You can reach us at:</p>
+    <ul>
+        <li>Email: support@your-domain.com</li>
+        <li>Phone: +91-XXXXXXXXXX</li>
+        <li>Hours: Monday to Saturday, 9 AM to 6 PM</li>
+    </ul>
+</div>
+
+<p>We look forward to serving you with the freshest seafood!</p>
+
+<p>Best regards,<br>
+The FISHLAND Team</p>
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - FISHLAND{% endblock %}
+
+{% block content %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<div class="container py-4">
+    <h2>Checkout</h2>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'orders:place_order' %}" id="checkout-form">
+        {% csrf_token %}
+        
+        <!-- Hidden fields for Razorpay -->
+        <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+        <input type="hidden" name="razorpay_order_id" id="razorpay_order_id" value="{{ razorpay_order_id }}">
+        <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+        <input type="hidden" name="payment_method" id="payment_method" value="online">
+        
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-8">
+                <!-- Order Items Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <img src="{{ item.product.image.url }}" 
+                                     alt="{{ item.product.name }}"
+                                     style="width: 100px; height: 100px; object-fit: cover;">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-1">{{ item.product.name }}</h5>
+                                <p class="mb-1">
+                                    {{ item.quantity }}kg × ₹{{ item.product.price_per_kg }}/kg
+                                    = ₹{{ item.total }}
+                                </p>
+                                <p class="text-muted mb-0">Seller: {{ item.product.seller.get_full_name }}</p>
+                                
+                                <!-- Stock Status -->
+                                <div class="mt-2">
+                                    {% if item.quantity <= item.product.stock_quantity %}
+                                        <span class="badge bg-success">
+                                            In Stock ({{ item.product.stock_quantity }}kg available)
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger">
+                                            Insufficient Stock (only {{ item.product.stock_quantity }}kg available)
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Delivery Address Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Delivery Address</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if addresses %}
+                        <div class="row">
+                            {% for address in addresses %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card {% if address.is_default %}border-primary{% endif %}">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="address_id" 
+                                                   value="{{ address.id }}"
+                                                   {% if address.is_default %}checked{% endif %}
+                                                   required>
+                                            <label class="form-check-label">
+                                                <strong>{{ address.name }}</strong><br>
+                                                {{ address.address_line1 }}<br>
+                                                {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+                                                {{ address.city }}, {{ address.state }}<br>
+                                                {{ address.pincode }}<br>
+                                                Phone: {{ address.phone }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            Please add a delivery address to continue.
+                            <a href="{% url 'accounts:add_address' %}" class="alert-link">Add Address</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Delivery Slot Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Delivery Slot</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Date Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">Select Delivery Date</label>
+                            <div class="row g-2">
+                                {% for date in available_dates %}
+                                <div class="col-auto">
+                                    <input type="radio" 
+                                           class="btn-check" 
+                                           name="delivery_date" 
+                                           id="date_{{ forloop.counter }}" 
+                                           value="{{ date.date }}"
+                                           {% if forloop.first %}checked{% endif %}
+                                           required>
+                                    <label class="btn btn-outline-primary" for="date_{{ forloop.counter }}">
+                                        <small class="d-block">{{ date.day }}</small>
+                                        <strong class="d-block">{{ date.date_num }}</strong>
+                                        <small class="d-block">{{ date.month }}</small>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Time Selection -->
+                        <div>
+                            <label class="form-label">Select Delivery Time</label>
+                            <div class="row g-2">
+                                {% for time in available_times %}
+                                <div class="col-md-4">
+                                    <input type="radio" 
+                                           class="btn-check" 
+                                           name="delivery_time" 
+                                           id="time_{{ forloop.counter }}" 
+                                           value="{{ time }}"
+                                           {% if forloop.first %}checked{% endif %}
+                                           required>
+                                    <label class="btn btn-outline-primary w-100" for="time_{{ forloop.counter }}">
+                                        {{ time }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-4">
+                <div class="card mb-4 sticky-top" style="top: 20px;">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>₹{{ subtotal }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Delivery Fee</span>
+                            <span>₹{{ delivery_fee }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total</strong>
+                            <strong class="text-primary">₹{{ total }}</strong>
+                        </div>
+
+                        <!-- Payment Method Selection -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Select Payment Method</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input payment-method" 
+                                       type="radio" 
+                                       name="payment_method_radio" 
+                                       id="payment_online" 
+                                       value="online" 
+                                       checked>
+                                <label class="form-check-label d-flex align-items-center" for="payment_online">
+                                    <span class="me-2">Pay Online</span>
+                                    <img src="{% static 'images/razorpay-logo.png' %}" alt="Razorpay" height="20">
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input payment-method" 
+                                       type="radio" 
+                                       name="payment_method_radio" 
+                                       id="payment_cod" 
+                                       value="cod">
+                                <label class="form-check-label d-flex align-items-center" for="payment_cod">
+                                    <span class="me-2">Cash on Delivery</span>
+                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if has_stock_issues %}
+                        <div class="alert alert-danger mb-3">
+                            Some items have stock availability issues. 
+                            Please update your cart before proceeding.
+                        </div>
+                        {% endif %}
+
+                        <!-- Online Payment Button -->
+                        <button type="button" 
+                                id="rzp-button" 
+                                class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center payment-btn">
+                            <span class="me-2">Pay ₹{{ total }} Securely</span>
+                            <i class="fas fa-lock"></i>
+                        </button>
+
+                        <!-- COD Button -->
+                        <button type="submit" 
+                                id="cod-button" 
+                                class="btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center payment-btn" 
+                                style="display: none;">
+                            <span class="me-2">Place Order (Cash on Delivery)</span>
+                            <i class="fas fa-money-bill-wave"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function initRazorpay() {
+    console.log("Initializing Razorpay..."); // Debug log
+    
+    // Get the buttons and form elements
+    var payButton = document.getElementById('rzp-button');
+    var codButton = document.getElementById('cod-button');
+    var paymentMethodInput = document.getElementById('payment_method');
+    var form = document.getElementById('checkout-form');
+    
+    // Handle payment method selection
+    var paymentMethodInputs = document.querySelectorAll('input[name="payment_method_radio"]');
+    paymentMethodInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+            console.log("Payment method changed to:", this.value); // Debug log
+            paymentMethodInput.value = this.value;
+            if (this.value === 'online') {
+                payButton.style.display = 'flex';
+                codButton.style.display = 'none';
+            } else {
+                payButton.style.display = 'none';
+                codButton.style.display = 'flex';
+            }
+        });
+    });
+    
+    // Create Razorpay options
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ total|floatformat:'0' }}00",
+        "currency": "INR",
+        "name": "Fishland",
+        "description": "Order Payment",
+        "image": "{% static 'images/logo.png' %}",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response) {
+            console.log("Payment success:", response); // Debug log
+            
+            // Get selected values
+            var addressId = document.querySelector('input[name="address_id"]:checked');
+            var deliveryDate = document.querySelector('input[name="delivery_date"]:checked');
+            var deliveryTime = document.querySelector('input[name="delivery_time"]:checked');
+            
+            console.log("Selected values:", { // Debug log
+                addressId: addressId ? addressId.value : null,
+                deliveryDate: deliveryDate ? deliveryDate.value : null,
+                deliveryTime: deliveryTime ? deliveryTime.value : null
+            });
+            
+            if (!addressId || !deliveryDate || !deliveryTime) {
+                alert('Please select delivery address and time slot');
+                return;
+            }
+            
+            // Set form values
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            paymentMethodInput.value = 'online';
+            
+            console.log("Form values set:", { // Debug log
+                payment_id: response.razorpay_payment_id,
+                order_id: response.razorpay_order_id,
+                signature: response.razorpay_signature,
+                payment_method: paymentMethodInput.value
+            });
+            
+            // Submit the form
+            form.submit();
+        },
+        "prefill": {
+            "name": "{{ request.user.get_full_name }}",
+            "email": "{{ request.user.email }}",
+            "contact": "{{ request.user.phone }}"
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    
+    console.log("Razorpay options:", options); // Debug log
+    
+    try {
+        // Initialize Razorpay
+        var rzp = new Razorpay(options);
+        console.log("Razorpay initialized"); // Debug log
+        
+        // Add click event listener to the online payment button
+        if (payButton) {
+            console.log("Adding click handler to pay button"); // Debug log
+            payButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate form before opening Razorpay
+                var addressId = document.querySelector('input[name="address_id"]:checked');
+                var deliveryDate = document.querySelector('input[name="delivery_date"]:checked');
+                var deliveryTime = document.querySelector('input[name="delivery_time"]:checked');
+                
+                console.log("Form validation:", { // Debug log
+                    addressId: addressId ? addressId.value : null,
+                    deliveryDate: deliveryDate ? deliveryDate.value : null,
+                    deliveryTime: deliveryTime ? deliveryTime.value : null
+                });
+                
+                if (!addressId || !deliveryDate || !deliveryTime) {
+                    alert('Please select delivery address and time slot');
+                    return;
+                }
+                
+                console.log("Opening Razorpay payment window"); // Debug log
+                rzp.open();
+            });
+        }
+        
+        // Add click event listener to the COD button
+        if (codButton) {
+            console.log("Adding click handler to COD button"); // Debug log
+            codButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate form before submission
+                var addressId = document.querySelector('input[name="address_id"]:checked');
+                var deliveryDate = document.querySelector('input[name="delivery_date"]:checked');
+                var deliveryTime = document.querySelector('input[name="delivery_time"]:checked');
+                
+                console.log("COD form validation:", { // Debug log
+                    addressId: addressId ? addressId.value : null,
+                    deliveryDate: deliveryDate ? deliveryDate.value : null,
+                    deliveryTime: deliveryTime ? deliveryTime.value : null
+                });
+                
+                if (!addressId || !deliveryDate || !deliveryTime) {
+                    alert('Please select delivery address and time slot');
+                    return;
+                }
+                
+                // Set payment method to COD
+                paymentMethodInput.value = 'cod';
+                
+                console.log("Submitting COD form with values:", { // Debug log
+                    addressId: addressId.value,
+                    deliveryDate: deliveryDate.value,
+                    deliveryTime: deliveryTime.value,
+                    paymentMethod: paymentMethodInput.value
+                });
+                
+                // Submit the form
+                form.submit();
+            });
+        }
+    } catch (error) {
+        console.error("Error initializing Razorpay:", error);
+    }
+}
+
+// Wait for both DOM and Razorpay script to load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded"); // Debug log
+    
+    // Check if Razorpay is loaded
+    var checkRazorpay = setInterval(function() {
+        if (window.Razorpay) {
+            console.log("Razorpay loaded"); // Debug log
+            clearInterval(checkRazorpay);
+            initRazorpay();
+        }
+    }, 100);
+    
+    // Timeout after 5 seconds
+    setTimeout(function() {
+        clearInterval(checkRazorpay);
+        if (!window.Razorpay) {
+            console.error("Razorpay failed to load");
+        }
+    }, 5000);
+});
+</script>
+{% endblock %}

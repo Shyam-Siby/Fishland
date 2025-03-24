@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #ff4444;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Order Cancellation Notice</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ customer_name }},</p>
+            
+            <p>We regret to inform you that your order <strong>#{{ order_number }}</strong> has been cancelled by the seller.</p>
+            
+            <h3>Cancellation Details:</h3>
+            <ul>
+                <li><strong>Reason:</strong> {{ cancellation_reason }}</li>
+                {% if cancellation_note %}
+                <li><strong>Additional Note:</strong> {{ cancellation_note }}</li>
+                {% endif %}
+                <li><strong>Cancelled by:</strong> {{ seller_name }}</li>
+                <li><strong>Cancelled on:</strong> {{ order.cancelled_at|date:"F j, Y, g:i a" }}</li>
+            </ul>
+            
+            {% if order.payment_status == 'PAID' %}
+            <p>If you have already made a payment for this order, a refund will be initiated within 3-5 business days.</p>
+            {% endif %}
+            
+            <p>We apologize for any inconvenience caused. You can place a new order for these items from our website.</p>
+            
+            <p>If you have any questions or concerns, please don't hesitate to contact our customer support.</p>
+            
+            <p>Best regards,<br>Team FISHLAND</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated email. Please do not reply to this message.</p>
+            <p>&copy; {% now "Y" %} FISHLAND. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

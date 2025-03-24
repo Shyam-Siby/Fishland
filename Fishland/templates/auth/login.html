@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - FISHLAND{% endblock %}
+
+{% block extra_css %}
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: calc(100vh - 100px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: url("{% static 'images/login.jpg' %}") no-repeat center center;
+        background-size: cover; /* Adjusts the image to cover the entire background */
+    }
+    /* Other existing styles remain unchanged */
+</style>
+{% endblock %}
+<style>
+    .auth-wrapper {
+        min-height: calc(100vh - 100px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    .auth-card {
+        max-width: 400px;
+        width: 100%;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .auth-header {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+    .auth-body {
+        padding: 2rem;
+    }
+    .social-login {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    .social-login .btn {
+        margin: 0.5rem;
+        padding: 0.5rem 1.5rem;
+    }
+    .divider {
+        margin: 2rem 0;
+        text-align: center;
+        position: relative;
+    }
+    .divider::before,
+    .divider::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 45%;
+        height: 1px;
+        background-color: #dee2e6;
+    }
+    .divider::before {
+        left: 0;
+    }
+    .divider::after {
+        right: 0;
+    }
+    .divider span {
+        background-color: #fff;
+        padding: 0 1rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="container">
+        <div class="auth-card mx-auto">
+            <div class="auth-header">
+                <img src="{% static 'images/logo.svg' %}" alt="FISHLAND Logo" class="mb-4" style="max-width: 200px;">
+                <h2>Welcome Back</h2>
+                <p class="text-muted">Sign in to continue to FISHLAND</p>
+            </div>
+            <div class="auth-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.remember }}
+                        <label class="form-check-label" for="{{ form.remember.id_for_label }}">Remember me</label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'accounts:password_reset' %}" class="text-muted">Forgot Password?</a>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <div class="social-login">
+                    <a href="{% url 'accounts:google_login' %}" class="btn btn-outline-dark">
+                        <i class="fab fa-google"></i> Sign in with Google
+                    </a>
+                    <a href="{% url 'accounts:facebook_login' %}" class="btn btn-outline-primary">
+                        <i class="fab fa-facebook-f"></i> Sign in with Facebook
+                    </a>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <p class="mb-0">Don't have an account? <a href="{% url 'accounts:register' %}">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

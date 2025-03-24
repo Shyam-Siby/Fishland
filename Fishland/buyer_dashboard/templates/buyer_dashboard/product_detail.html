@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'buyer_dashboard:products' %}">Products</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h2 class="mb-3">{{ product.name }}</h2>
+            <p class="text-muted mb-3">{{ product.description }}</p>
+
+            <!-- Price and Stock Information -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Price and Availability</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Price per kg:</span>
+                        <strong class="text-primary">₹{{ product.price_per_kg }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Minimum Order:</span>
+                        <strong>{{ product.minimum_order_quantity }} kg</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Stock Status:</span>
+                        {% if product.stock_quantity > 0 %}
+                            <span class="badge bg-success">In Stock ({{ product.stock_quantity }} kg available)</span>
+                        {% else %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Form -->
+            {% if product.is_available and product.stock_quantity > 0 %}
+            <form method="post" action="{% url 'cart:add' product.id %}" class="card">
+                {% csrf_token %}
+                <div class="card-body">
+                    <h5 class="card-title">Place Order</h5>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity (kg)</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="quantity" 
+                               name="quantity" 
+                               min="{{ product.minimum_order_quantity }}"
+                               max="{{ product.stock_quantity }}"
+                               step="0.1"
+                               value="{{ product.minimum_order_quantity }}"
+                               required>
+                        <div class="form-text">
+                            Minimum order: {{ product.minimum_order_quantity }} kg
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Price</label>
+                        <div class="form-control-plaintext" id="totalPrice">
+                            ₹{{ product.price_per_kg|multiply:product.minimum_order_quantity }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add to Cart</button>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-warning">
+                {% if not product.is_available %}
+                    This product is currently not available for purchase.
+                {% else %}
+                    This product is out of stock.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Seller Information -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Seller Information</h5>
+                    <p class="card-text">
+                        <strong>Seller:</strong> {{ product.seller.get_full_name }}
+                        <br>
+                        <strong>Location:</strong> {{ product.seller.address.city }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Customer Reviews</h5>
+                    {% if user.is_authenticated %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        Write a Review
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if product.reviews.all %}
+                        {% for review in product.reviews.all %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <h6>{{ review.user.get_full_name }}</h6>
+                                <small class="text-muted">{{ review.created_at|date }}</small>
+                            </div>
+                            <div class="mb-2">
+                                {% for i in review.rating|times %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% endfor %}
+                            </div>
+                            <p>{{ review.comment }}</p>
+                            <hr>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center">No reviews yet. Be the first to review this product!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'products:add_review' product.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Write a Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select name="rating" class="form-select" required>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comment</label>
+                        <textarea name="comment" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantity');
+    const totalPriceDiv = document.getElementById('totalPrice');
+    const pricePerKg = {{ product.price_per_kg }};
+    
+    if (quantityInput) {
+        quantityInput.addEventListener('input', function() {
+            const quantity = parseFloat(this.value) || 0;
+            const total = (quantity * pricePerKg).toFixed(2);
+            totalPriceDiv.textContent = `₹${total}`;
+        });
+    }
+});
+</script>
+{% endblock %}

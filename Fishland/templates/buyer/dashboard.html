@@ -1,0 +1,162 @@
+{% extends 'buyer/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Dashboard - FISHLAND{% endblock %}
+
+{% block buyer_content %}
+<div class="row g-4">
+    <!-- Welcome Card -->
+    <div class="col-12">
+        <div class="buyer-card bg-gradient" style="background: linear-gradient(135deg, #00796b, #004d40);">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 style="color: #FFD700; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);" class="mb-3">Welcome back, {{ user.get_full_name }}!</h2>
+                    <p style="color: #98FB98; font-size: 1.1rem;" class="mb-0">Track your orders, manage addresses, and explore your favorite seafood.</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <img src="{% static 'images/fish-illustration.png' %}" alt="Fish" class="img-fluid" style="max-height: 120px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-md-3">
+        <div class="buyer-card text-center">
+            <i class="ri-shopping-bag-line text-primary mb-3" style="font-size: 2rem;"></i>
+            <h5 class="mb-1">Total Orders</h5>
+            <p class="text-muted mb-2">{{ total_orders }} orders placed</p>
+            <a href="{% url 'orders:order_history' %}" class="btn btn-sm btn-buyer btn-buyer-primary">
+                View Orders
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="buyer-card text-center">
+            <i class="ri-map-pin-line text-success mb-3" style="font-size: 2rem;"></i>
+            <h5 class="mb-1">Delivery Addresses</h5>
+            <p class="text-muted mb-2">{{ addresses_count }} saved addresses</p>
+            <a href="{% url 'accounts:address_list' %}" class="btn btn-sm btn-buyer btn-buyer-primary">
+                Manage Addresses
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="buyer-card text-center">
+            <i class="ri-user-settings-line text-warning mb-3" style="font-size: 2rem;"></i>
+            <h5 class="mb-1">Profile Settings</h5>
+            <p class="text-muted mb-2">Update your account details</p>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-buyer btn-buyer-primary">
+                Edit Profile
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="buyer-card text-center">
+            <i class="ri-truck-line text-info mb-3" style="font-size: 2rem;"></i>
+            <h3 class="mb-1">{{ recent_orders.count }}</h3>
+            <p class="text-muted mb-0">Recent Orders</p>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="col-12">
+        <div class="buyer-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">Recent Orders</h4>
+                <a href="{% url 'orders:order_history' %}" class="btn btn-buyer btn-buyer-primary">View All Orders</a>
+            </div>
+            {% if recent_orders %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>
+                                <div>{{ order.created_at|date:"M d, Y" }}</div>
+                                <small class="text-muted">{{ order.created_at|time:"h:i A" }}</small>
+                            </td>
+                            <td>{{ order.items.count }} items</td>
+                            <td>₹{{ order.total|floatformat:2|intcomma }}</td>
+                            <td>
+                                <span class="badge rounded-pill 
+                                    {% if order.status == 'DELIVERED' %}bg-success
+                                    {% elif order.status == 'CANCELLED' %}bg-danger
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <img src="{% static 'images/no-orders.svg' %}" alt="No Orders" class="img-fluid mb-3" style="max-width: 200px;">
+                <h5>No Orders Yet</h5>
+                <p class="text-muted">Start shopping to see your orders here!</p>
+                <a href="{% url 'shop:home' %}" class="btn btn-buyer btn-buyer-primary">
+                    Browse Products
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-12">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="buyer-card h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="ri-map-pin-add-line text-primary" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">Add New Address</h5>
+                            <p class="text-muted mb-2">Save a new delivery location</p>
+                            <a href="{% url 'buyer:add_address' %}" class="btn btn-sm btn-buyer btn-buyer-primary">
+                                Add Address
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="buyer-card h-100">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="ri-user-settings-line text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">Update Profile</h5>
+                            <p class="text-muted mb-2">Manage your account details</p>
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-buyer btn-buyer-primary">
+                                Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

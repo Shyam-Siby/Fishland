@@ -1,0 +1,175 @@
+{% extends 'delivery/base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} - FISHLAND Delivery{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Order #{{ order.id }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Customer Details</h6>
+                            <p class="mb-1"><strong>Name:</strong> {{ order.user.get_full_name }}</p>
+                            <p class="mb-1"><strong>Phone:</strong> {{ order.address.phone }}</p>
+                            <p class="mb-0"><strong>Email:</strong> {{ order.user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Order Information</h6>
+                            <p class="mb-1"><strong>Status:</strong> 
+                                <span class="badge {% if order.status == 'OUT_FOR_DELIVERY' %}bg-primary{% else %}bg-warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </p>
+                            <p class="mb-1"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
+                            <p class="mb-0"><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted">Delivery Address</h6>
+                        <p class="mb-1">{{ order.address.name }}</p>
+                        <p class="mb-1">{{ order.address.address_line1 }}</p>
+                        {% if order.address.address_line2 %}
+                        <p class="mb-1">{{ order.address.address_line2 }}</p>
+                        {% endif %}
+                        <p class="mb-1">{{ order.address.city }}, {{ order.address.state }}</p>
+                        <p class="mb-0">PIN: {{ order.address.pincode }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted">Order Items</h6>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td>{{ item.product.name }}</td>
+                                        <td>{{ item.quantity }} kg</td>
+                                        <td>₹{{ item.price_per_kg }}/kg</td>
+                                        <td>₹{{ item.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td><strong>₹{{ order.total }}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if order.status == 'ASSIGNED_TO_DELIVERY' %}
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="accept">
+                        <button type="submit" class="btn btn-primary">Accept & Pick Up Order</button>
+                    </form>
+                    {% elif order.status == 'OUT_FOR_DELIVERY' %}
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="complete">
+                        <button type="submit" class="btn btn-success">Mark as Delivered</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Delivery Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Delivery Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker {% if order.delivery_assigned_at %}bg-success{% else %}bg-secondary{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Order Assigned</h6>
+                                {% if order.delivery_assigned_at %}
+                                <small class="text-muted">{{ order.delivery_assigned_at|date:"M d, Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">Pending</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker {% if order.delivery_pickup_at %}bg-success{% else %}bg-secondary{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Order Picked Up</h6>
+                                {% if order.delivery_pickup_at %}
+                                <small class="text-muted">{{ order.delivery_pickup_at|date:"M d, Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">Pending</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker {% if order.delivery_completed_at %}bg-success{% else %}bg-secondary{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Order Delivered</h6>
+                                {% if order.delivery_completed_at %}
+                                <small class="text-muted">{{ order.delivery_completed_at|date:"M d, Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">Pending</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.timeline-item:not(:last-child) .timeline-marker::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    bottom: -40px;
+    width: 2px;
+    background-color: #e9ecef;
+    transform: translateX(-50%);
+}
+</style>
+{% endblock %}

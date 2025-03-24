@@ -1,0 +1,242 @@
+{% extends 'delivery/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - FISHLAND Delivery{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .stats-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+
+    .delivery-list {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .delivery-item {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .delivery-item:last-child {
+        border-bottom: none;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-top: 2rem;
+    }
+
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    .current-status {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    .btn-group .btn {
+        padding: 0.5rem 1rem;
+    }
+    .btn-group .btn i {
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Status Toggle Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Current Status: 
+                        <span class="badge {% if delivery_profile.status == 'ONLINE' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ delivery_profile.status }}
+                        </span>
+                    </h5>
+                </div>
+                <form method="post" action="{% url 'delivery:toggle_status' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn {% if delivery_profile.status == 'ONLINE' %}btn-danger{% else %}btn-success{% endif %}">
+                        {% if delivery_profile.status == 'ONLINE' %}Go Offline{% else %}Go Online{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Today's Orders -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Today's Orders</h6>
+                    <h2 class="card-title mb-0">{{ orders_today_count }}</h2>
+                    <small class="text-success">{{ delivered_today_count }} Delivered</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Today's Earnings -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Today's Earnings</h6>
+                    <h2 class="card-title mb-0">₹{{ earnings_today }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Earnings -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Earnings</h6>
+                    <h2 class="card-title mb-0">₹{{ total_earnings }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rating -->
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Average Rating</h6>
+                    <h2 class="card-title mb-0">{{ avg_rating }} ⭐</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Pending Orders -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pending Orders</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_orders %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in pending_orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.user.get_full_name }}</td>
+                                    <td>{{ order.address.city }}</td>
+                                    <td>
+                                        <span class="badge {% if order.status == 'OUT_FOR_DELIVERY' %}bg-primary{% else %}bg-warning{% endif %}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'delivery:order_detail' order.id %}" class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center mb-0">No pending orders</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                    <div class="list-group list-group-flush">
+                        {% for order in recent_orders %}
+                        <a href="{% url 'delivery:order_detail' order.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Order #{{ order.id }}</h6>
+                                <small class="text-muted">{{ order.delivery_assigned_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ order.address.city }}</p>
+                            <small class="text-muted">{{ order.get_status_display }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center mb-0">No recent orders</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Refresh the page every 5 minutes to get updates
+    setTimeout(function() {
+        window.location.reload();
+    }, 300000);
+</script>
+{% endblock %}

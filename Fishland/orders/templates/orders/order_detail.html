@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_history' %}">Orders</a></li>
+            <li class="breadcrumb-item active">Order #{{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <!-- Order Status -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Order #{{ order.order_number }}</h4>
+                    <p class="text-muted">Placed on {{ order.created_at|date:"F d, Y" }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span class="badge 
+                        {% if order.status == 'DELIVERED' %}bg-success
+                        {% elif order.status == 'CANCELLED' %}bg-danger
+                        {% else %}bg-primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                    <span class="badge 
+                        {% if order.payment_status == 'COMPLETED' %}bg-success
+                        {% elif order.payment_status == 'FAILED' %}bg-danger
+                        {% else %}bg-warning{% endif %}">
+                        {{ order.get_payment_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Items -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order.items.all %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <img src="{{ item.product.image.url }}" 
+                                 alt="{{ item.product.name }}" 
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">{{ item.product.name }}</h5>
+                            <p class="mb-1">
+                                {{ item.quantity }}kg × ₹{{ item.price_per_kg }}/kg
+                                = ₹{{ item.total }}
+                            </p>
+                            <p class="text-muted mb-0">Seller: {{ item.product.seller.get_full_name }}</p>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <strong>₹{{ order.total }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Fee:</span>
+                        <strong>₹{{ order.delivery_fee }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-0">
+                        <span>Total:</span>
+                        <strong class="text-primary">₹{{ order.total }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Date:</strong> {{ order.delivery_date|date }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ order.delivery_time }}</p>
+                    <p class="mb-0"><strong>Address:</strong><br>
+                        {{ order.delivery_address.street_address }}<br>
+                        {{ order.delivery_address.city }}, {{ order.delivery_address.state }}<br>
+                        {{ order.delivery_address.postal_code }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            {% if order.status == 'PENDING' %}
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{% url 'orders:cancel' order.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-100">
+                            Cancel Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

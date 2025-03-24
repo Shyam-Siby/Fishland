@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">My Orders</h2>
+
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Order #{{ order.order_number }}</h5>
+                                <span class="badge {% if order.status == 'completed' %}bg-success{% elif order.status == 'pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ order.status|title }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-2"><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y" }}</p>
+                                    <p class="mb-2"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
+                                    <p class="mb-2"><strong>Payment Status:</strong> 
+                                        <span class="badge {% if order.payment_status == 'PAID' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ order.payment_status|title }}
+                                        </span>
+                                    </p>
+                                    {% if order.razorpay_payment_id %}
+                                    <p class="mb-0"><strong>Transaction ID:</strong> {{ order.razorpay_payment_id }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-2">Delivery Address:</h6>
+                                    <p class="mb-2">
+                                        {{ order.address.street_address }}<br>
+                                        {{ order.address.city }}, {{ order.address.state }} {{ order.address.postal_code }}
+                                    </p>
+                                    <p class="mb-0"><strong>Delivery Date:</strong> {{ order.delivery_date|date:"F j, Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6 class="mb-3">Order Items</h6>
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in order.items.all %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ item.product.name }}</h6>
+                                                        <small class="text-muted">{{ item.product.seller.get_full_name }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ item.quantity }}kg</td>
+                                            <td>₹{{ item.price_per_kg }}/kg</td>
+                                            <td>₹{{ item.total }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td>₹{{ order.subtotal }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Delivery Fee:</strong></td>
+                                            <td>₹{{ order.delivery_fee }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td><strong>₹{{ order.total }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+            <h4>No orders yet</h4>
+            <p class="text-muted">You haven't placed any orders yet.</p>
+            <a href="{% url 'products:product_list' %}" class="btn btn-primary">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

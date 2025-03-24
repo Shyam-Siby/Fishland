@@ -1,0 +1,375 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block title %}Reviews for {{ product.name }} - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Product Overview -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                         class="img-fluid rounded">
+                </div>
+                <div class="col-md-9">
+                    <h2 class="mb-3">{{ product.name }}</h2>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <span class="h4 mb-0">{{ product.average_rating|floatformat:1 }}</span>
+                            <span class="text-muted">/5</span>
+                        </div>
+                        <div class="me-3">
+                            {% for i in "12345"|make_list %}
+                            <i class="fas fa-star{% if forloop.counter <= product.average_rating %} text-warning{% else %} text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <span class="text-muted">({{ product.total_reviews }} reviews)</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        {% for rating in rating_distribution %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2" style="width: 60px;">
+                                    {{ rating.stars }} stars
+                                </div>
+                                <div class="progress flex-grow-1" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: {{ rating.percentage }}%"></div>
+                                </div>
+                                <div class="ms-2" style="width: 40px;">
+                                    {{ rating.count }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if can_review %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        <i class="fas fa-star me-1"></i>Write a Review
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Filter by Rating</label>
+                    <select class="form-select" name="rating" onchange="this.form.submit()">
+                        <option value="">All Ratings</option>
+                        {% for i in "54321"|make_list %}
+                        <option value="{{ i }}" {% if request.GET.rating == i %}selected{% endif %}>
+                            {{ i }} Stars
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sort by</label>
+                    <select class="form-select" name="sort" onchange="this.form.submit()">
+                        <option value="recent" {% if request.GET.sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="helpful" {% if request.GET.sort == 'helpful' %}selected{% endif %}>Most Helpful</option>
+                        <option value="high" {% if request.GET.sort == 'high' %}selected{% endif %}>Highest Rating</option>
+                        <option value="low" {% if request.GET.sort == 'low' %}selected{% endif %}>Lowest Rating</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filter by Purchase</label>
+                    <select class="form-select" name="verified" onchange="this.form.submit()">
+                        <option value="">All Reviews</option>
+                        <option value="1" {% if request.GET.verified == '1' %}selected{% endif %}>Verified Purchases Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Has Images</label>
+                    <select class="form-select" name="has_images" onchange="this.form.submit()">
+                        <option value="">All Reviews</option>
+                        <option value="1" {% if request.GET.has_images == '1' %}selected{% endif %}>With Images Only</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    {% if reviews %}
+    <div class="card">
+        <div class="card-body">
+            {% for review in reviews %}
+            <div class="border-bottom pb-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="mb-2">
+                            {% for i in "12345"|make_list %}
+                            <i class="fas fa-star{% if forloop.counter <= review.rating %} text-warning{% else %} text-muted{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                        <h5 class="mb-1">{{ review.title }}</h5>
+                        <div class="text-muted small mb-2">
+                            by {{ review.user.get_full_name }} on {{ review.created_at|date:"M d, Y" }}
+                            {% if review.is_verified_purchase %}
+                            <span class="badge bg-success ms-2">Verified Purchase</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" onclick="markHelpful('{{ review.id }}')">
+                            <i class="fas fa-thumbs-up me-1"></i>Helpful ({{ review.helpful_count }})
+                        </button>
+                        {% if review.user == request.user %}
+                        <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteReview('{{ review.id }}')">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <p class="mb-3">{{ review.content }}</p>
+
+                {% if review.images.all %}
+                <div class="review-images mb-3">
+                    <div class="row g-2">
+                        {% for image in review.images.all %}
+                        <div class="col-auto">
+                            <a href="{{ image.image.url }}" data-lightbox="review-{{ review.id }}">
+                                <img src="{{ image.image.url }}" alt="Review Image" 
+                                     class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if review.seller_response %}
+                <div class="bg-light p-3 rounded">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-store text-primary fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">Seller Response</h6>
+                            <small class="text-muted d-block mb-2">
+                                {{ review.seller_response_date|date:"M d, Y" }}
+                            </small>
+                            <p class="mb-0">{{ review.seller_response }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if reviews.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if reviews.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reviews.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in reviews.paginator.page_range %}
+                    {% if reviews.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if reviews.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reviews.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            Next
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+        <h4>No Reviews Yet</h4>
+        <p class="text-muted mb-4">Be the first to review this product</p>
+        {% if can_review %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+            <i class="fas fa-star me-1"></i>Write a Review
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <!-- Rating -->
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating">
+                            {% for i in "54321"|make_list %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" required>
+                            <label for="star{{ i }}">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Review Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Review Title</label>
+                        <input type="text" class="form-control" name="title" required
+                               maxlength="100" placeholder="Summarize your experience">
+                    </div>
+
+                    <!-- Review Content -->
+                    <div class="mb-3">
+                        <label class="form-label">Your Review</label>
+                        <textarea class="form-control" name="content" rows="4" required
+                                  maxlength="1000" placeholder="Share your experience with this product"></textarea>
+                        <small class="text-muted">Maximum 1000 characters</small>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="mb-3">
+                        <label class="form-label">Add Photos (optional)</label>
+                        <input type="file" class="form-control" name="images" multiple
+                               accept="image/*" data-max-files="5">
+                        <small class="text-muted">You can upload up to 5 images</small>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="imagePreview" class="row g-2 mb-3"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 0.3rem;
+        font-size: 1.5rem;
+        justify-content: flex-end;
+    }
+
+    .rating input {
+        display: none;
+    }
+
+    .rating label {
+        cursor: pointer;
+        color: #ddd;
+        transition: color 0.2s;
+    }
+
+    .rating input:checked ~ label,
+    .rating label:hover,
+    .rating label:hover ~ label {
+        color: #ffc107;
+    }
+
+    .rating label:hover,
+    .rating label:hover ~ label {
+        color: #ffdb70;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Image Preview
+    document.querySelector('input[name="images"]').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        if (this.files.length > 5) {
+            showToast('You can only upload up to 5 images', 'warning');
+            this.value = '';
+            return;
+        }
+
+        Array.from(this.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'col-auto';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" 
+                         class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
+                `;
+                preview.appendChild(div);
+            }
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Submit Review
+    function submitReview() {
+        const form = document.getElementById('reviewForm');
+        const formData = new FormData(form);
+        
+        makeRequest('/api/products/{{ product.id }}/reviews/', 'POST', formData)
+            .then(response => {
+                showToast('Review submitted successfully');
+                location.reload();
+            });
+    }
+
+    // Mark Review as Helpful
+    function markHelpful(reviewId) {
+        makeRequest(`/api/reviews/${reviewId}/helpful/`, 'POST')
+            .then(response => {
+                showToast('Thank you for your feedback');
+                location.reload();
+            });
+    }
+
+    // Delete Review
+    function deleteReview(reviewId) {
+        if (confirm('Are you sure you want to delete this review?')) {
+            makeRequest(`/api/reviews/${reviewId}/delete/`, 'DELETE')
+                .then(response => {
+                    showToast('Review deleted successfully');
+                    location.reload();
+                });
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'seller_dashboard/base.html' %}
+{% load static %}
+
+{% block dashboard_content %}
+<div class="container py-4">
+    <h2>Stock Analytics</h2>
+
+    <!-- Stock Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Products</h5>
+                    <h2 class="card-text">{{ total_products }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">In Stock Products</h5>
+                    <h2 class="card-text">{{ in_stock_products }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Low Stock Products</h5>
+                    <h2 class="card-text">{{ low_stock_products }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Out of Stock</h5>
+                    <h2 class="card-text">{{ out_of_stock_products }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Level Chart -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Stock Levels by Product</h5>
+            <canvas id="stockLevelsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Low Stock Alerts</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Current Stock</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in low_stock_alerts %}
+                        <tr>
+                            <td>{{ alert.product.name }}</td>
+                            <td>{{ alert.product.stock_quantity }}kg</td>
+                            <td>{{ alert.threshold_quantity }}kg</td>
+                            <td>
+                                <span class="badge {% if alert.product.stock_quantity <= alert.threshold_quantity %}bg-danger{% else %}bg-success{% endif %}">
+                                    {% if alert.product.stock_quantity <= alert.threshold_quantity %}
+                                        Low Stock
+                                    {% else %}
+                                        Normal
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'seller_dashboard:manage_stock' alert.product.id %}" 
+                                   class="btn btn-sm btn-primary">
+                                    Update Stock
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No low stock alerts</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Stock Updates -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Stock Updates</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Type</th>
+                            <th>Previous</th>
+                            <th>New</th>
+                            <th>Changed By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for history in recent_stock_history %}
+                        <tr>
+                            <td>{{ history.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ history.product.name }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if history.change_type == 'ADDITION' %}bg-success
+                                    {% elif history.change_type == 'REDUCTION' %}bg-danger
+                                    {% else %}bg-info{% endif %}">
+                                    {{ history.get_change_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ history.previous_quantity }}kg</td>
+                            <td>{{ history.new_quantity }}kg</td>
+                            <td>{{ history.changed_by.email }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No recent stock updates</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Stock Levels Chart
+    const ctx = document.getElementById('stockLevelsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ product_names|safe }},
+            datasets: [{
+                label: 'Current Stock (kg)',
+                data: {{ stock_levels|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Stock Quantity (kg)'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

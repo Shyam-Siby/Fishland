@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - FISHLAND{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:category_list' %}">Categories</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Category Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                {% if category.image %}
+                <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">{{ category.name }}</h1>
+                    {% if category.description %}
+                    <p class="card-text">{{ category.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">₹{{ product.price_per_kg }}/kg</p>
+                    <p class="card-text"><small>Min. Order: {{ product.minimum_order_quantity }}kg</small></p>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{% url 'products:product_detail' product.id %}" class="btn btn-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No products found in this category.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if products.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.previous_page_number }}">&laquo;</a>
+            </li>
+            {% endif %}
+            
+            {% for num in products.paginator.page_range %}
+            <li class="page-item {% if products.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ products.next_page_number }}">&raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

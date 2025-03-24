@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - FISHLAND{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .product-card .card-img-top {
+        height: 200px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .product-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    
+    .product-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .product-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    
+    .product-card .price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0277bd;
+    }
+    
+    .product-card .min-order {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+    }
+    
+    .category-badge {
+        background: #e3f2fd;
+        color: #0277bd;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-bottom: 0.8rem;
+    }
+    
+    .filter-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-card .card-title {
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-form {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .search-form input {
+        border-radius: 25px;
+        padding: 0.8rem 1.2rem;
+        padding-right: 3rem;
+        border: 2px solid #e3f2fd;
+        transition: border-color 0.3s ease;
+    }
+    
+    .search-form input:focus {
+        border-color: #0277bd;
+        box-shadow: none;
+    }
+    
+    .search-form button {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0277bd;
+        border: none;
+    }
+    
+    .search-form button:hover {
+        background: #01579b;
+    }
+    
+    .filter-list {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .filter-list .list-group-item {
+        border: none;
+        padding: 0.8rem 1.2rem;
+        color: #2c3e50;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-list .list-group-item:hover {
+        background: #e3f2fd;
+        color: #0277bd;
+    }
+    
+    .filter-list .list-group-item.active {
+        background: #0277bd;
+        color: white;
+    }
+    
+    .pagination {
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        border: none;
+        color: #0277bd;
+        padding: 0.8rem 1.2rem;
+        margin: 0 0.2rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination .page-link:hover {
+        background: #e3f2fd;
+        color: #01579b;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #0277bd;
+        color: white;
+    }
+    
+    .view-details-btn {
+        background: #0277bd;
+        border: none;
+        border-radius: 25px;
+        padding: 0.8rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .view-details-btn:hover {
+        background: #01579b;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar with filters -->
+        <div class="col-md-3">
+            <div class="filter-card">
+                <div class="card-body">
+                    <h5 class="card-title">Filters</h5>
+                    
+                    <!-- Search Form -->
+                    <form method="get" class="search-form">
+                        <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                    
+                    <!-- Categories -->
+                    <h6 class="mb-3 fw-bold">Categories</h6>
+                    <div class="list-group filter-list mb-4">
+                        <a href="{% url 'products:product_list' %}" 
+                           class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            <i class="fas fa-th-large me-2"></i> All Categories
+                        </a>
+                        {% for category in categories %}
+                        <a href="{% url 'products:product_list' %}?category={{ category.id }}" 
+                           class="list-group-item list-group-item-action {% if current_category == category.id|stringformat:'s' %}active{% endif %}">
+                            <i class="fas fa-tag me-2"></i> {{ category.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Sort Options -->
+                    <h6 class="mb-3 fw-bold">Sort By</h6>
+                    <div class="list-group filter-list">
+                        <a href="{% url 'products:product_list' %}{% if current_category %}?category={{ current_category }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if not current_sort %}active{% endif %}">
+                            <i class="fas fa-star me-2"></i> Featured
+                        </a>
+                        <a href="{% url 'products:product_list' %}?sort=price_low{% if current_category %}&category={{ current_category }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_sort == 'price_low' %}active{% endif %}">
+                            <i class="fas fa-sort-amount-down me-2"></i> Price: Low to High
+                        </a>
+                        <a href="{% url 'products:product_list' %}?sort=price_high{% if current_category %}&category={{ current_category }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_sort == 'price_high' %}active{% endif %}">
+                            <i class="fas fa-sort-amount-up me-2"></i> Price: High to Low
+                        </a>
+                        <a href="{% url 'products:product_list' %}?sort=newest{% if current_category %}&category={{ current_category }}{% endif %}" 
+                           class="list-group-item list-group-item-action {% if current_sort == 'newest' %}active{% endif %}">
+                            <i class="fas fa-clock me-2"></i> Newest First
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Grid -->
+        <div class="col-md-9">
+            <div class="row">
+                {% if products %}
+                    {% for product in products %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card h-100">
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            <div class="card-body">
+                                <span class="category-badge">{{ product.category.name }}</span>
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="price mb-2">₹{{ product.price_per_kg }}/kg</p>
+                                <p class="min-order mb-3">Min. Order: {{ product.minimum_order_quantity }}kg</p>
+                                <a href="{% url 'products:product_detail' product.id %}" class="btn btn-primary view-details-btn w-100">
+                                    <i class="fas fa-eye me-2"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info border-0 rounded-3 shadow-sm">
+                            <i class="fas fa-info-circle me-2"></i>No products found.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in products.paginator.page_range %}
+                    <li class="page-item {% if products.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

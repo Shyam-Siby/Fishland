@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Stock - {{ product.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Update Stock: {{ product.name }}</h4>
+                    <a href="{% url 'products:stock_management' %}" class="btn btn-outline-primary btn-sm">
+                        Back to Stock Management
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Current Stock Info -->
+                    <div class="alert alert-info">
+                        <strong>Current Stock:</strong> {{ product.stock_quantity }}kg
+                    </div>
+                    
+                    <!-- Stock Update Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="change_type" class="form-label">Change Type</label>
+                            <select class="form-select" id="change_type" name="change_type" required>
+                                <option value="ADDITION">Add Stock</option>
+                                <option value="REDUCTION">Reduce Stock</option>
+                                <option value="ADJUSTMENT">Set New Value</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Quantity (kg)</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   step="0.01" min="0" required>
+                            <div class="form-text" id="quantity_help"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason for Change</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Update Stock</button>
+                    </form>
+                    
+                    <!-- Stock History -->
+                    <div class="mt-5">
+                        <h5>Recent Stock History</h5>
+                        {% if stock_history %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Change Type</th>
+                                            <th>Previous</th>
+                                            <th>New</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for history in stock_history %}
+                                        <tr>
+                                            <td>{{ history.created_at|date:"M d, Y H:i" }}</td>
+                                            <td>
+                                                <span class="badge {% if history.change_type == 'ADDITION' %}bg-success{% elif history.change_type == 'REDUCTION' %}bg-danger{% else %}bg-info{% endif %}">
+                                                    {{ history.get_change_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ history.previous_quantity }}kg</td>
+                                            <td>{{ history.new_quantity }}kg</td>
+                                            <td>{{ history.change_reason }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No stock history available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.getElementById('change_type').addEventListener('change', function() {
+        const helpText = document.getElementById('quantity_help');
+        const currentStock = {{ product.stock_quantity }};
+        
+        switch(this.value) {
+            case 'ADDITION':
+                helpText.textContent = 'Enter the amount to add to current stock.';
+                break;
+            case 'REDUCTION':
+                helpText.textContent = `Enter the amount to reduce (max ${currentStock}kg).`;
+                break;
+            case 'ADJUSTMENT':
+                helpText.textContent = 'Enter the new total stock value.';
+                break;
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

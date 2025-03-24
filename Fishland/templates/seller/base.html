@@ -1,0 +1,61 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/seller.css' %}">
+<style>
+    .navbar {
+        background: linear-gradient(135deg, #0066cc, #003366) !important;
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+        color: white !important;
+        transform: translateY(-2px);
+    }
+
+    .nav-link.active {
+        color: white !important;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+    }
+
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .dropdown-item.active {
+        background-color: #0066cc;
+        color: white;
+    }
+
+    .main-content {
+        padding: 2rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="container">
+            {% block seller_content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+Thank you for your order!
+
+Order Details:
+Order #{{ order.order_number }}
+Date: {{ order.created_at|date:"F d, Y" }}
+Status: {{ order.get_status_display }}
+
+Delivery Details:
+{{ delivery_address.name }}
+{{ delivery_address.address_line1 }}
+{% if delivery_address.address_line2 %}{{ delivery_address.address_line2 }}{% endif %}
+{{ delivery_address.city }}, {{ delivery_address.state }}
+{{ delivery_address.pincode }}
+Phone: {{ delivery_address.phone }}
+
+Delivery Date: {{ order.delivery_date|date:"F d, Y" }}
+Delivery Time: {{ order.delivery_time }}
+
+Order Items:
+{% for item in order_items %}
+- {{ item.product.name }}
+  {{ item.quantity }}kg × ₹{{ item.price_per_kg }}/kg = ₹{{ item.total }}
+  Seller: {{ item.product.seller.get_full_name }}
+{% endfor %}
+
+Order Summary:
+Subtotal: ₹{{ order.subtotal }}
+Delivery Fee: ₹{{ order.delivery_fee }}
+Total: ₹{{ order.total }}
+
+Payment Information:
+Method: {{ order.get_payment_method_display }}
+Status: {{ order.get_payment_status_display }}
+{% if order.payment_method == 'RAZORPAY' %}Transaction ID: {{ order.razorpay_payment_id }}{% endif %}
+
+Thank you for shopping with FISHLAND!

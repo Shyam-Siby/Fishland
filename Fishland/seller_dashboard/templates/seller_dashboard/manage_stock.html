@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>Manage Stock - {{ product.name }}</h2>
+    
+    <!-- Current Stock Information -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Current Stock</h5>
+            <p class="card-text">
+                <strong>Available Quantity:</strong> {{ product.stock_quantity }}kg<br>
+                <strong>Status:</strong> 
+                {% if product.is_available %}
+                    <span class="badge bg-success">Available</span>
+                {% else %}
+                    <span class="badge bg-danger">Unavailable</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Stock Update Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Update Stock</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Action</label>
+                    <select name="action" class="form-select" required>
+                        <option value="add">Add Stock</option>
+                        <option value="reduce">Reduce Stock</option>
+                        <option value="adjust">Set Exact Quantity</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Quantity (kg)</label>
+                    <input type="number" name="quantity" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason</label>
+                    <textarea name="reason" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Stock</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stock History -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Stock History</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Previous</th>
+                            <th>New</th>
+                            <th>Changed By</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for history in stock_history %}
+                        <tr>
+                            <td>{{ history.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if history.change_type == 'ADDITION' %}
+                                    <span class="badge bg-success">Added</span>
+                                {% elif history.change_type == 'REDUCTION' %}
+                                    <span class="badge bg-danger">Reduced</span>
+                                {% else %}
+                                    <span class="badge bg-info">Adjusted</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ history.previous_quantity }}kg</td>
+                            <td>{{ history.new_quantity }}kg</td>
+                            <td>{{ history.changed_by.email }}</td>
+                            <td>{{ history.change_reason }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No stock history available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to Stock Alert Settings -->
+    <div class="mt-4">
+        <a href="{% url 'seller_dashboard:manage_stock_alert' product.id %}" class="btn btn-outline-primary">
+            Manage Stock Alerts
+        </a>
+    </div>
+</div>
+{% endblock %}

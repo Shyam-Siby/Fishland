@@ -1,0 +1,44 @@
+{% extends "email/base_email.html" %}
+
+{% block content %}
+<h2>Congratulations! Your Seller Account is Approved</h2>
+
+<p>Dear {{ user.get_full_name }},</p>
+
+<p>Great news! Your application to become a seller on FISHLAND has been approved. You can now start listing your products and selling on our platform.</p>
+
+<div class="info">
+    <h3>Next Steps:</h3>
+    <ol>
+        <li>Log in to your seller dashboard</li>
+        <li>Complete your seller profile</li>
+        <li>Add your bank account details for payments</li>
+        <li>Start listing your products</li>
+    </ol>
+</div>
+
+<p>Access your seller dashboard by clicking the button below:</p>
+
+<a href="https://your-domain.com/seller/dashboard" class="button">Go to Seller Dashboard</a>
+
+<div class="info">
+    <h3>Important Resources:</h3>
+    <ul>
+        <li>Seller Guidelines</li>
+        <li>Product Listing Best Practices</li>
+        <li>Shipping and Delivery Policy</li>
+        <li>Commission Structure</li>
+    </ul>
+</div>
+
+<p>If you need any assistance or have questions about selling on FISHLAND, our seller support team is here to help:</p>
+<ul>
+    <li>Email: seller.support@your-domain.com</li>
+    <li>Phone: +91-XXXXXXXXXX</li>
+</ul>
+
+<p>Welcome to the FISHLAND seller community!</p>
+
+<p>Best regards,<br>
+The FISHLAND Team</p>
+{% endblock %}
